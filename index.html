@@ -279,27 +279,53 @@
                 <h2 class="text-lg font-bold text-slate-800 flex items-center gap-2">
                     <i data-lucide="car" class="w-5 h-5 text-blue-600"></i> Vehículos de la Empresa
                 </h2>
-                <button onclick="toggleNewVehicleForm()" class="text-xs bg-blue-600 text-white font-bold px-3 py-1.5 rounded-lg flex items-center gap-1 shadow">
+                <button onclick="openNewVehicleForm()" class="text-xs bg-blue-600 text-white font-bold px-3 py-1.5 rounded-lg flex items-center gap-1 shadow">
                     <i data-lucide="plus" class="w-3.5 h-3.5"></i> Agregar
                 </button>
             </div>
 
-            <div id="newVehicleForm" class="hidden bg-white p-4 rounded-xl border border-slate-200 shadow-sm space-y-3">
-                <h3 class="text-sm font-bold text-slate-700">Registrar Nuevo Vehículo</h3>
+            <!-- Formulario Crear / Editar Vehículo -->
+            <div id="vehicleFormContainer" class="hidden bg-white p-4 rounded-xl border border-slate-200 shadow-md space-y-3">
+                <div class="flex items-center justify-between">
+                    <h3 id="vehicleFormTitle" class="text-sm font-bold text-slate-700">Registrar Nuevo Vehículo</h3>
+                    <button onclick="closeVehicleForm()" class="text-slate-400 hover:text-slate-600">
+                        <i data-lucide="x" class="w-4 h-4"></i>
+                    </button>
+                </div>
+                <input type="hidden" id="editingOriginalPlate" value="">
                 <div class="grid grid-cols-2 gap-2">
-                    <input type="text" id="vPlate" placeholder="Placa / Matrícula *" class="border p-2 rounded text-xs">
-                    <input type="text" id="vModel" placeholder="Marca / Modelo" class="border p-2 rounded text-xs">
+                    <div>
+                        <label class="block text-[10px] font-semibold text-slate-500 mb-0.5">Placa / Matrícula *</label>
+                        <input type="text" id="vPlate" placeholder="Ej. P-123456" class="w-full border border-slate-300 p-2 rounded text-xs uppercase outline-none focus:ring-2 focus:ring-blue-500">
+                    </div>
+                    <div>
+                        <label class="block text-[10px] font-semibold text-slate-500 mb-0.5">Marca / Modelo</label>
+                        <input type="text" id="vModel" placeholder="Ej. Toyota Hilux" class="w-full border border-slate-300 p-2 rounded text-xs outline-none focus:ring-2 focus:ring-blue-500">
+                    </div>
                 </div>
                 <div class="grid grid-cols-2 gap-2">
-                    <input type="number" id="vOdo" placeholder="Odómetro Inicial (Km)" class="border p-2 rounded text-xs">
-                    <input type="text" id="vTech" placeholder="Técnico Asignado" class="border p-2 rounded text-xs">
+                    <div>
+                        <label class="block text-[10px] font-semibold text-slate-500 mb-0.5">Odómetro Actual (Km)</label>
+                        <input type="number" id="vOdo" placeholder="Ej. 45200" class="w-full border border-slate-300 p-2 rounded text-xs outline-none focus:ring-2 focus:ring-blue-500">
+                    </div>
+                    <div>
+                        <label class="block text-[10px] font-semibold text-slate-500 mb-0.5">Vendedor / Técnico</label>
+                        <input type="text" id="vTech" placeholder="Nombre asignado" class="w-full border border-slate-300 p-2 rounded text-xs outline-none focus:ring-2 focus:ring-blue-500">
+                    </div>
                 </div>
-                <button onclick="saveVehicle()" class="w-full bg-emerald-600 text-white font-bold py-2 rounded text-xs shadow">
-                    Guardar Vehículo
-                </button>
+                <div class="flex gap-2 pt-1">
+                    <button onclick="saveVehicle()" class="flex-1 bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-2 rounded-lg text-xs shadow flex items-center justify-center gap-1">
+                        <i data-lucide="check" class="w-3.5 h-3.5"></i>
+                        <span id="vehicleSaveBtnText">Guardar Vehículo</span>
+                    </button>
+                    <button id="deleteVehicleBtn" onclick="deleteCurrentEditingVehicle()" class="hidden bg-red-50 hover:bg-red-100 text-red-600 border border-red-200 font-bold px-3 py-2 rounded-lg text-xs flex items-center justify-center gap-1">
+                        <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
+                        <span>Borrar</span>
+                    </button>
+                </div>
             </div>
 
-            <div id="vehiclesList" class="space-y-2"></div>
+            <div id="vehiclesList" class="space-y-2.5"></div>
         </section>
 
     </main>
@@ -331,7 +357,7 @@
         </div>
     </nav>
 
-    <!-- LÓGICA JAVASCRIPT CORREGIDA -->
+    <!-- LÓGICA JAVASCRIPT -->
     <script>
         const SYMBOLS = { USD:'$', CRC:'₡', NIO:'C$', HNL:'L', GTQ:'Q', MXN:'$', DOP:'RD$', PAB:'B/.' };
         const DEFAULT_RATES = { USD:1, CRC:515, NIO:36.5, HNL:24.7, GTQ:7.75, MXN:17.1, DOP:58.5, PAB:1 };
@@ -370,6 +396,11 @@
             const saved = localStorage.getItem('fleet_app_state');
             if (saved) {
                 try { state = JSON.parse(saved); } catch(e) {}
+            }
+            if (!state.vehicles) state.vehicles = [];
+            if (!state.records) state.records = [];
+            if (state.vehicles.length > 0 && !state.vehicles.some(v => v.plate === state.activeVehiclePlate)) {
+                state.activeVehiclePlate = state.vehicles[0].plate;
             }
             document.getElementById('headerCurrencySelect').value = state.baseCurrency || 'USD';
             document.getElementById('headerUnitSelect').value = state.defaultUnit || 'Gal';
@@ -453,6 +484,11 @@
 
         function saveRecord(e) {
             e.preventDefault();
+            if (!state.activeVehiclePlate) {
+                alert('Por favor registra y selecciona un vehículo primero.');
+                showTab('vehicles');
+                return;
+            }
             
             const cost = parseFloat(document.getElementById('costInput').value);
             const odometer = parseInt(document.getElementById('odometerInput').value);
@@ -636,6 +672,10 @@
 
         function renderHeaderVehicles() {
             const sel = document.getElementById('activeVehicleSelect');
+            if (state.vehicles.length === 0) {
+                sel.innerHTML = `<option value="">Sin vehículos</option>`;
+                return;
+            }
             sel.innerHTML = state.vehicles.map(v => 
                 `<option value="${v.plate}" ${v.plate === state.activeVehiclePlate ? 'selected' : ''}>${v.plate} - ${v.model}</option>`
             ).join('');
@@ -646,43 +686,157 @@
             saveState();
             renderHistory();
             renderSummary();
+            renderVehicles();
         }
 
-        function toggleNewVehicleForm() {
-            document.getElementById('newVehicleForm').classList.toggle('hidden');
+        // --- GESTIÓN DE VEHÍCULOS (CREAR, EDITAR, BORRAR) ---
+
+        function openNewVehicleForm() {
+            document.getElementById('editingOriginalPlate').value = '';
+            document.getElementById('vehicleFormTitle').innerText = 'Registrar Nuevo Vehículo';
+            document.getElementById('vehicleSaveBtnText').innerText = 'Guardar Vehículo';
+            document.getElementById('deleteVehicleBtn').classList.add('hidden');
+            
+            document.getElementById('vPlate').value = '';
+            document.getElementById('vModel').value = '';
+            document.getElementById('vOdo').value = '';
+            document.getElementById('vTech').value = '';
+            
+            document.getElementById('vehicleFormContainer').classList.remove('hidden');
+            if (window.lucide) lucide.createIcons();
+        }
+
+        function editVehicle(plate) {
+            const v = state.vehicles.find(x => x.plate === plate);
+            if (!v) return;
+
+            document.getElementById('editingOriginalPlate').value = v.plate;
+            document.getElementById('vehicleFormTitle').innerText = `Editar Vehículo (${v.plate})`;
+            document.getElementById('vehicleSaveBtnText').innerText = 'Guardar Cambios';
+            document.getElementById('deleteVehicleBtn').classList.remove('hidden');
+
+            document.getElementById('vPlate').value = v.plate;
+            document.getElementById('vModel').value = v.model || '';
+            document.getElementById('vOdo').value = v.odometer || 0;
+            document.getElementById('vTech').value = v.driver || '';
+
+            document.getElementById('vehicleFormContainer').classList.remove('hidden');
+            document.getElementById('vehicleFormContainer').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+            if (window.lucide) lucide.createIcons();
+        }
+
+        function closeVehicleForm() {
+            document.getElementById('vehicleFormContainer').classList.add('hidden');
         }
 
         function saveVehicle() {
-            const plate = document.getElementById('vPlate').value.toUpperCase();
-            const model = document.getElementById('vModel').value;
+            const originalPlate = document.getElementById('editingOriginalPlate').value.trim();
+            const plate = document.getElementById('vPlate').value.trim().toUpperCase();
+            const model = document.getElementById('vModel').value.trim();
             const odo = parseInt(document.getElementById('vOdo').value) || 0;
-            const tech = document.getElementById('vTech').value;
+            const tech = document.getElementById('vTech').value.trim();
 
-            if (!plate) return alert('Por favor ingresa la placa');
+            if (!plate) return alert('Por favor ingresa la placa del vehículo.');
 
-            state.vehicles.push({ plate, model, odometer: odo, driver: tech });
-            state.activeVehiclePlate = plate;
+            if (originalPlate) {
+                // Modo Edición
+                if (plate !== originalPlate && state.vehicles.some(x => x.plate === plate)) {
+                    return alert('Ya existe otro vehículo registrado con esa placa.');
+                }
+                const idx = state.vehicles.findIndex(x => x.plate === originalPlate);
+                if (idx !== -1) {
+                    state.vehicles[idx] = { plate, model, odometer: odo, driver: tech };
+                    // Si cambió la placa, actualizar registros asociados y el vehículo activo
+                    if (plate !== originalPlate) {
+                        state.records.forEach(r => {
+                            if (r.plate === originalPlate) r.plate = plate;
+                        });
+                        if (state.activeVehiclePlate === originalPlate) {
+                            state.activeVehiclePlate = plate;
+                        }
+                    }
+                }
+            } else {
+                // Modo Creación
+                if (state.vehicles.some(x => x.plate === plate)) {
+                    return alert('Ya existe un vehículo con esa placa.');
+                }
+                state.vehicles.push({ plate, model, odometer: odo, driver: tech });
+                state.activeVehiclePlate = plate;
+            }
+
             saveState();
-
             renderHeaderVehicles();
             renderVehicles();
-            toggleNewVehicleForm();
+            renderHistory();
+            renderSummary();
+            closeVehicleForm();
+        }
+
+        function deleteVehicle(plate) {
+            const v = state.vehicles.find(x => x.plate === plate);
+            if (!v) return;
+
+            const confirmDelete = confirm(`¿Seguro que deseas borrar el vehículo ${v.plate} (${v.model || 'Sin modelo'})?
+
+Nota: También se eliminarán sus registros asociados.`);
+            if (!confirmDelete) return;
+
+            state.vehicles = state.vehicles.filter(x => x.plate !== plate);
+            state.records = state.records.filter(r => r.plate !== plate);
+
+            if (state.activeVehiclePlate === plate) {
+                state.activeVehiclePlate = state.vehicles.length > 0 ? state.vehicles[0].plate : '';
+            }
+
+            saveState();
+            renderHeaderVehicles();
+            renderVehicles();
+            renderHistory();
+            renderSummary();
+            closeVehicleForm();
+        }
+
+        function deleteCurrentEditingVehicle() {
+            const originalPlate = document.getElementById('editingOriginalPlate').value.trim();
+            if (originalPlate) {
+                deleteVehicle(originalPlate);
+            }
         }
 
         function renderVehicles() {
             const container = document.getElementById('vehiclesList');
-            container.innerHTML = state.vehicles.map(v => `
-                <div class="bg-white p-3.5 rounded-xl border border-slate-200 shadow-sm flex items-center justify-between">
-                    <div>
-                        <div class="font-bold text-sm text-slate-800">${v.plate}</div>
-                        <div class="text-xs text-slate-500">${v.model}</div>
-                        <div class="text-[10px] text-slate-400">Técnico: ${v.driver || 'No asignado'}</div>
+            if (state.vehicles.length === 0) {
+                container.innerHTML = `<div class="bg-white p-6 rounded-xl text-center text-slate-400 text-xs border border-slate-200">No hay vehículos registrados. Toca "+ Agregar" para crear uno.</div>`;
+                return;
+            }
+
+            container.innerHTML = state.vehicles.map(v => {
+                const isActive = v.plate === state.activeVehiclePlate;
+                return `
+                <div class="bg-white p-3.5 rounded-xl border ${isActive ? 'border-blue-400 ring-1 ring-blue-100' : 'border-slate-200'} shadow-sm flex items-center justify-between gap-2">
+                    <div onclick="switchVehicle('${v.plate}')" class="flex-1 cursor-pointer">
+                        <div class="flex items-center gap-2">
+                            <span class="font-bold text-sm text-slate-800">${v.plate}</span>
+                            ${isActive ? '<span class="text-[9px] bg-blue-100 text-blue-700 font-bold px-1.5 py-0.5 rounded">Activo</span>' : ''}
+                        </div>
+                        <div class="text-xs text-slate-600 font-medium">${v.model || 'Sin modelo especificado'}</div>
+                        <div class="text-[10px] text-slate-400 mt-0.5">Asignado: ${v.driver || 'No asignado'} • <span class="font-bold text-blue-600">${v.odometer} Km</span></div>
                     </div>
-                    <div class="text-right">
-                        <div class="text-xs font-bold text-blue-600">${v.odometer} Km</div>
+                    <div class="flex items-center gap-1.5">
+                        <button onclick="editVehicle('${v.plate}')" title="Editar vehículo" class="p-2 bg-slate-100 hover:bg-blue-50 text-slate-600 hover:text-blue-600 rounded-lg border border-slate-200 transition-colors flex items-center gap-1 text-xs font-semibold">
+                            <i data-lucide="pencil" class="w-3.5 h-3.5"></i>
+                            <span>Editar</span>
+                        </button>
+                        <button onclick="deleteVehicle('${v.plate}')" title="Borrar vehículo" class="p-2 bg-red-50 hover:bg-red-100 text-red-600 rounded-lg border border-red-200 transition-colors">
+                            <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
+                        </button>
                     </div>
                 </div>
-            `).join('');
+                `;
+            }).join('');
+
+            if (window.lucide) lucide.createIcons();
         }
 
         function exportToCSV() {
