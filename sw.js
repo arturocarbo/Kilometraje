@@ -1,4 +1,4 @@
-const CACHE_NAME = 'aseal-flota-v5';
+const CACHE_NAME = 'aseal-flota-v6';
 const ASSETS = [
   './',
   './index.html',
