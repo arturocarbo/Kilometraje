@@ -63,8 +63,8 @@
             
             <div class="flex items-center space-x-1.5">
                 <select id="headerUnitSelect" onchange="changeDefaultUnit(this.value)" class="bg-slate-100 text-slate-700 text-xs font-semibold px-2 py-1.5 rounded-lg border border-slate-300 outline-none">
-                    <option value="Gal">Galones (Gal)</option>
-                    <option value="Lts">Litros (Lts)</option>
+                    <option value="Gal">Gal</option>
+                    <option value="Lts">Lts</option>
                 </select>
 
                 <select id="headerCurrencySelect" onchange="changeBaseCurrency(this.value)" class="bg-slate-100 text-slate-700 text-xs font-semibold px-2 py-1.5 rounded-lg border border-slate-300 outline-none">
@@ -78,6 +78,11 @@
                     <option value="PAB">PAB (B/.)</option>
                 </select>
 
+                <!-- Botón Settings (Respaldo / Importar CSV) -->
+                <button onclick="openSettingsModal()" title="Ajustes, Respaldo e Importar CSV" class="bg-slate-100 hover:bg-blue-50 text-slate-700 hover:text-blue-600 p-1.5 rounded-lg border border-slate-300 transition-colors">
+                    <i data-lucide="settings" class="w-4 h-4"></i>
+                </button>
+
                 <button id="pwaInstallBtn" onclick="triggerPWAInstall()" class="hidden bg-amber-400 text-slate-900 text-xs font-bold px-2 py-1.5 rounded-lg flex items-center space-x-1 shadow animate-pulse">
                     <i data-lucide="download" class="w-3.5 h-3.5"></i>
                 </button>
@@ -90,7 +95,7 @@
                 <span class="text-xs text-blue-100 font-medium flex items-center gap-1">
                     <i data-lucide="car" class="w-3.5 h-3.5"></i> Vehículo:
                 </span>
-                <select id="activeVehicleSelect" onchange="switchVehicle(this.value)" class="bg-blue-700 text-amber-300 font-bold text-sm px-2.5 py-1 rounded-md border border-blue-500 outline-none max-w-[220px] truncate">
+                <select id="activeVehicleSelect" onchange="switchVehicle(this.value)" class="bg-blue-700 text-amber-300 font-bold text-sm px-2.5 py-1 rounded-md border border-blue-500 outline-none max-w-[230px] truncate">
                 </select>
             </div>
         </div>
@@ -137,7 +142,7 @@
                             <div>
                                 <label class="block text-xs font-semibold text-slate-600 mb-1">Volumen Cargado</label>
                                 <div class="flex">
-                                    <input type="number" step="0.01" id="fuelAmount" placeholder="Ej. 10.5" class="w-full bg-white border border-slate-300 rounded-l-lg px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-blue-500">
+                                    <input type="number" step="0.001" id="fuelAmount" placeholder="Ej. 10.5" class="w-full bg-white border border-slate-300 rounded-l-lg px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-blue-500">
                                     <select id="fuelUnit" class="bg-slate-100 border border-l-0 border-slate-300 rounded-r-lg px-2 text-xs font-bold text-slate-700">
                                         <option value="Gal">Gal</option>
                                         <option value="Lts">Lts</option>
@@ -380,6 +385,82 @@
 
     </main>
 
+    <!-- MODAL SETTINGS (BACKUP, RESTAURAR E IMPORTAR CSV) -->
+    <div id="settingsModal" class="hidden fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-end sm:items-center justify-center p-0 sm:p-4">
+        <div class="bg-white w-full max-w-md rounded-t-3xl sm:rounded-2xl shadow-2xl max-h-[92vh] overflow-y-auto p-5 space-y-4">
+            
+            <!-- Encabezado Settings -->
+            <div class="flex items-center justify-between border-b border-slate-100 pb-3">
+                <div class="flex items-center gap-2.5">
+                    <div class="p-2.5 rounded-xl bg-blue-100 text-blue-700">
+                        <i data-lucide="settings" class="w-5 h-5"></i>
+                    </div>
+                    <div>
+                        <h3 class="font-bold text-base text-slate-800">Ajustes y Datos</h3>
+                        <p class="text-[11px] text-slate-400">Copias de seguridad e importación CSV</p>
+                    </div>
+                </div>
+                <button onclick="closeSettingsModal()" class="p-2 bg-slate-100 hover:bg-slate-200 rounded-full text-slate-500">
+                    <i data-lucide="x" class="w-4 h-4"></i>
+                </button>
+            </div>
+
+            <!-- SECCIÓN 1: IMPORTAR CSV DE VEHÍCULOS -->
+            <div class="bg-emerald-50/70 border border-emerald-200 rounded-2xl p-4 space-y-2.5">
+                <div class="flex items-center gap-2 text-emerald-800 font-bold text-sm">
+                    <i data-lucide="file-spreadsheet" class="w-4 h-4 text-emerald-600"></i>
+                    <span>Importar Vehículo e Historial (CSV)</span>
+                </div>
+                <p class="text-[11px] text-slate-600 leading-relaxed">
+                    Sube un archivo <strong>.csv</strong> (como los generados de Creta Grand 2024 o Creta 2024). Si el vehículo no existe en la app, se creará automáticamente junto con todos sus registros sin duplicar datos.
+                </p>
+                
+                <div class="pt-1">
+                    <label class="block text-[10px] font-bold text-slate-500 uppercase mb-1">Asignar a placa (Opcional si el CSV ya la trae):</label>
+                    <select id="csvTargetVehicleSelect" class="w-full bg-white border border-slate-300 rounded-lg px-3 py-2 text-xs font-semibold text-slate-700 outline-none mb-2.5">
+                        <option value="AUTO">Detectar automáticamente desde el CSV (Recomendado)</option>
+                    </select>
+
+                    <input type="file" id="csvImportInput" accept=".csv,text/csv" class="hidden" onchange="handleCSVImport(event)">
+                    <button onclick="document.getElementById('csvImportInput').click()" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-2.5 px-4 rounded-xl text-xs shadow flex items-center justify-center gap-2 transition-transform active:scale-95">
+                        <i data-lucide="upload" class="w-4 h-4"></i>
+                        <span>Seleccionar Archivo CSV</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- SECCIÓN 2: BACKUP COMPLETO (JSON) -->
+            <div class="bg-slate-50 border border-slate-200 rounded-2xl p-4 space-y-3">
+                <div class="flex items-center gap-2 text-slate-800 font-bold text-sm">
+                    <i data-lucide="database-backup" class="w-4 h-4 text-blue-600"></i>
+                    <span>Copia de Seguridad (Backup Total)</span>
+                </div>
+                <p class="text-[11px] text-slate-500 leading-relaxed">
+                    Descarga un respaldo completo con todos tus vehículos, registros, ajustes y fotos de facturas, o restaura un respaldo previo.
+                </p>
+
+                <div class="grid grid-cols-2 gap-2.5 pt-1">
+                    <button onclick="downloadFullBackup()" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2.5 px-3 rounded-xl text-xs shadow flex items-center justify-center gap-1.5 transition-transform active:scale-95">
+                        <i data-lucide="download" class="w-4 h-4"></i>
+                        <span>Hacer Backup</span>
+                    </button>
+
+                    <input type="file" id="backupRestoreInput" accept=".json,application/json" class="hidden" onchange="restoreFullBackup(event)">
+                    <button onclick="document.getElementById('backupRestoreInput').click()" class="bg-white hover:bg-slate-100 text-slate-700 border border-slate-300 font-bold py-2.5 px-3 rounded-xl text-xs shadow-2xs flex items-center justify-center gap-1.5 transition-transform active:scale-95">
+                        <i data-lucide="rotate-ccw" class="w-4 h-4 text-amber-600"></i>
+                        <span>Recuperar Backup</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Estado actual de la base local -->
+            <div id="settingsStatsFooter" class="text-center text-[11px] text-slate-400 pt-1">
+                0 vehículos · 0 registros almacenados en este dispositivo
+            </div>
+
+        </div>
+    </div>
+
     <!-- MODAL DETALLE COMPLETO Y EDICIÓN DE REGISTRO -->
     <div id="recordModal" class="hidden fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-end sm:items-center justify-center p-0 sm:p-4">
         <div class="bg-white w-full max-w-md rounded-t-3xl sm:rounded-2xl shadow-2xl max-h-[92vh] overflow-y-auto p-5 space-y-4">
@@ -516,7 +597,7 @@
                         <div>
                             <label class="block text-[11px] font-semibold text-slate-600 mb-1">Volumen</label>
                             <div class="flex">
-                                <input type="number" step="0.01" id="editFuelAmount" class="w-full bg-white border border-slate-300 rounded-l-lg px-2 py-1.5 text-xs outline-none">
+                                <input type="number" step="0.001" id="editFuelAmount" class="w-full bg-white border border-slate-300 rounded-l-lg px-2 py-1.5 text-xs outline-none">
                                 <select id="editFuelUnit" class="bg-slate-100 border border-l-0 border-slate-300 rounded-r-lg px-1.5 text-xs font-bold text-slate-700">
                                     <option value="Gal">Gal</option>
                                     <option value="Lts">Lts</option>
@@ -727,6 +808,281 @@
             localStorage.setItem('fleet_app_state', JSON.stringify(state));
         }
 
+        // --- SETTINGS: BACKUP, RESTORE E IMPORTAR CSV ---
+
+        function openSettingsModal() {
+            const sel = document.getElementById('csvTargetVehicleSelect');
+            let opts = `<option value="AUTO">Detectar automáticamente desde el CSV (Recomendado)</option>`;
+            state.vehicles.forEach(v => {
+                opts += `<option value="${v.plate}">Forzar asignación a: ${v.plate} (${v.model || 'Vehículo'})</option>`;
+            });
+            sel.innerHTML = opts;
+
+            document.getElementById('settingsStatsFooter').innerText =
+                `${state.vehicles.length} vehículo(s) · ${state.records.length} registro(s) guardados localmente`;
+
+            document.getElementById('settingsModal').classList.remove('hidden');
+            if (window.lucide) lucide.createIcons();
+        }
+
+        function closeSettingsModal() {
+            document.getElementById('settingsModal').classList.add('hidden');
+        }
+
+        function downloadFullBackup() {
+            const backupPayload = {
+                app: 'AseaL Flota Vehicular',
+                version: '1.0',
+                exportedAt: new Date().toISOString(),
+                state: state
+            };
+            const jsonStr = JSON.stringify(backupPayload, null, 2);
+            const blob = new Blob([jsonStr], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `Backup_AseaL_Flota_${getTodayLocal()}.json`;
+            a.click();
+            URL.revokeObjectURL(url);
+        }
+
+        function restoreFullBackup(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    const parsed = JSON.parse(e.target.result);
+                    const restoredState = parsed.state ? parsed.state : parsed;
+
+                    if (!Array.isArray(restoredState.vehicles) || !Array.isArray(restoredState.records)) {
+                        alert('El archivo seleccionado no tiene un formato de respaldo válido de AseaL Flota.');
+                        return;
+                    }
+
+                    const confirmMsg = `Se encontraron ${restoredState.vehicles.length} vehículo(s) y ${restoredState.records.length} registro(s) en el respaldo.\n\n¿Deseas reemplazar los datos actuales con este respaldo?`;
+                    if (!confirm(confirmMsg)) return;
+
+                    state = restoredState;
+                    if (state.vehicles.length > 0 && !state.vehicles.some(v => v.plate === state.activeVehiclePlate)) {
+                        state.activeVehiclePlate = state.vehicles[0].plate;
+                    }
+                    saveState();
+                    loadLocalStorage();
+                    renderHeaderVehicles();
+                    renderHistory();
+                    renderSummary();
+                    renderVehicles();
+                    closeSettingsModal();
+                    alert('Respaldo restaurado correctamente.');
+                } catch (err) {
+                    alert('Error al leer el archivo JSON de respaldo: ' + err.message);
+                } finally {
+                    event.target.value = '';
+                }
+            };
+            reader.readAsText(file);
+        }
+
+        function parseCSVLine(line, delimiter) {
+            const result = [];
+            let current = '';
+            let inQuotes = false;
+            for (let i = 0; i < line.length; i++) {
+                const ch = line[i];
+                if (ch === '"') {
+                    if (inQuotes && line[i + 1] === '"') {
+                        current += '"';
+                        i++;
+                    } else {
+                        inQuotes = !inQuotes;
+                    }
+                } else if (ch === delimiter && !inQuotes) {
+                    result.push(current.trim());
+                    current = '';
+                } else {
+                    current += ch;
+                }
+            }
+            result.push(current.trim());
+            return result;
+        }
+
+        function handleCSVImport(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            const forcedPlate = document.getElementById('csvTargetVehicleSelect').value;
+            const reader = new FileReader();
+
+            reader.onload = function(e) {
+                try {
+                    let rawText = e.target.result.replace(/^\uFEFF/, ''); // limpiar BOM UTF-8
+                    const lines = rawText.split(/\r?\n/).filter(l => l.trim().length > 0);
+                    if (lines.length < 2) {
+                        alert('El archivo CSV está vacío o no tiene filas de datos.');
+                        return;
+                    }
+
+                    // Detectar delimitador (, o ;)
+                    const delimiter = (lines[0].split(';').length > lines[0].split(',').length) ? ';' : ',';
+                    const rawHeaders = parseCSVLine(lines[0], delimiter).map(h => h.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, ""));
+
+                    const colIdx = (names) => {
+                        for (const n of names) {
+                            const idx = rawHeaders.indexOf(n);
+                            if (idx !== -1) return idx;
+                        }
+                        return -1;
+                    };
+
+                    const idxId = colIdx(['id']);
+                    const idxPlate = colIdx(['placa', 'plate', 'matricula']);
+                    const idxModel = colIdx(['vehiculo', 'vehicle', 'modelo', 'model']);
+                    const idxDate = colIdx(['fecha', 'date']);
+                    const idxCat = colIdx(['categoria', 'category', 'tipo']);
+                    const idxOdo = colIdx(['odometro', 'odometer', 'km', 'kilometraje']);
+                    const idxCost = colIdx(['montobase', 'monto', 'cost', 'total', 'montototal']);
+                    const idxCurr = colIdx(['monedatx', 'moneda', 'currency']);
+                    const idxVol = colIdx(['volumen', 'fuelamount', 'galones', 'litros', 'cantidad']);
+                    const idxUnit = colIdx(['unidad', 'fuelunit', 'unit']);
+                    const idxFuelType = colIdx(['tipocombustible', 'fueltype', 'combustible']);
+                    const idxFullTank = colIdx(['tanquelleno', 'fulltank', 'lleno']);
+                    const idxStation = colIdx(['estacion', 'station', 'gasolinera', 'proveedor']);
+                    const idxInvoice = colIdx(['factura', 'invoice', 'comprobante']);
+                    const idxNotes = colIdx(['notas', 'notes', 'observaciones']);
+
+                    if (idxDate === -1 || idxOdo === -1 || idxCost === -1) {
+                        alert('El CSV debe tener al menos las columnas: Fecha, Odometro y Monto (o MontoBase).');
+                        return;
+                    }
+
+                    let importedCount = 0;
+                    let skippedDuplicates = 0;
+                    let createdVehicles = [];
+                    let lastImportedPlate = null;
+
+                    for (let i = 1; i < lines.length; i++) {
+                        const cols = parseCSVLine(lines[i], delimiter);
+                        if (cols.length < 3) continue;
+
+                        let plate = '';
+                        if (forcedPlate !== 'AUTO') {
+                            plate = forcedPlate;
+                        } else if (idxPlate !== -1 && cols[idxPlate]) {
+                            plate = cols[idxPlate].toUpperCase().trim();
+                        } else {
+                            plate = state.activeVehiclePlate || 'SIN-PLACA';
+                        }
+
+                        const modelName = (idxModel !== -1 && cols[idxModel]) ? cols[idxModel].trim() : plate;
+                        const dateStr = (cols[idxDate] || '').trim();
+                        const odoVal = parseInt(String(cols[idxOdo] || '0').replace(/[^0-9]/g, ''), 10) || 0;
+                        const costVal = parseFloat(String(cols[idxCost] || '0').replace(/[^0-9.-]/g, '')) || 0;
+
+                        if (!dateStr || odoVal <= 0) continue;
+
+                        // Crear vehículo si no existe todavía
+                        let vehicleObj = state.vehicles.find(v => v.plate === plate);
+                        if (!vehicleObj) {
+                            vehicleObj = { plate: plate, model: modelName, odometer: odoVal, driver: '' };
+                            state.vehicles.push(vehicleObj);
+                            createdVehicles.push(`${plate} (${modelName})`);
+                        }
+
+                        // Evitar duplicados exactos (misma placa + fecha + odómetro + monto)
+                        const isDup = state.records.some(r =>
+                            r.plate === plate &&
+                            r.date === dateStr &&
+                            r.odometer === odoVal &&
+                            Math.abs(r.baseCost - costVal) < 0.02
+                        );
+                        if (isDup) {
+                            skippedDuplicates++;
+                            continue;
+                        }
+
+                        const rawCat = idxCat !== -1 ? (cols[idxCat] || '').toLowerCase() : 'gasolina';
+                        const category = rawCat.includes('taller') || rawCat.includes('mant') ? 'taller' : 'gasolina';
+                        const txCurr = (idxCurr !== -1 && cols[idxCurr]) ? cols[idxCurr].toUpperCase() : state.baseCurrency;
+                        const volVal = idxVol !== -1 ? (parseFloat(String(cols[idxVol] || '0').replace(/[^0-9.-]/g, '')) || 0) : 0;
+                        const unitVal = (idxUnit !== -1 && cols[idxUnit]) ? cols[idxUnit] : (state.defaultUnit || 'Gal');
+                        const fType = (idxFuelType !== -1 && cols[idxFuelType]) ? cols[idxFuelType] : 'Regular';
+                        const notesVal = (idxNotes !== -1 && cols[idxNotes]) ? cols[idxNotes] : '';
+                        const stationVal = (idxStation !== -1 && cols[idxStation]) ? cols[idxStation] : '';
+                        const invoiceVal = (idxInvoice !== -1 && cols[idxInvoice]) ? cols[idxInvoice] : `IMP-${i}`;
+
+                        let isFull = true;
+                        if (idxFullTank !== -1 && cols[idxFullTank]) {
+                            const ft = cols[idxFullTank].toLowerCase();
+                            if (ft === 'no' || ft === 'false' || ft === '0' || ft === 'parcial') isFull = false;
+                        } else if (notesVal.toLowerCase().includes('parcial')) {
+                            isFull = false;
+                        }
+
+                        const recId = (idxId !== -1 && parseInt(cols[idxId], 10))
+                            ? parseInt(cols[idxId], 10) + Math.floor(Math.random() * 1000)
+                            : (Date.now() + i);
+
+                        const newRec = {
+                            id: recId,
+                            plate: plate,
+                            category: category,
+                            date: dateStr,
+                            odometer: odoVal,
+                            cost: costVal,
+                            txCurrency: txCurr,
+                            exchangeRate: 1,
+                            baseCost: costVal,
+                            station: stationVal,
+                            invoice: invoiceVal,
+                            notes: notesVal,
+                            photo: null
+                        };
+
+                        if (category === 'gasolina') {
+                            newRec.fuelAmount = volVal;
+                            newRec.fuelUnit = unitVal;
+                            newRec.fuelType = fType;
+                            newRec.fullTank = isFull;
+                        }
+
+                        state.records.push(newRec);
+                        if (odoVal > vehicleObj.odometer) vehicleObj.odometer = odoVal;
+                        importedCount++;
+                        lastImportedPlate = plate;
+                    }
+
+                    if (lastImportedPlate) {
+                        state.activeVehiclePlate = lastImportedPlate;
+                    }
+
+                    saveState();
+                    renderHeaderVehicles();
+                    renderVehicles();
+                    renderHistory();
+                    renderSummary();
+                    closeSettingsModal();
+                    showTab('history');
+
+                    let summaryMsg = `Importación completada:\n• ${importedCount} registros nuevos agregados.`;
+                    if (createdVehicles.length > 0) {
+                        summaryMsg += `\n• Vehículos creados: ${createdVehicles.join(', ')}`;
+                    }
+                    if (skippedDuplicates > 0) {
+                        summaryMsg += `\n• ${skippedDuplicates} registros omitidos porque ya existían.`;
+                    }
+                    alert(summaryMsg);
+                } catch (err) {
+                    alert('Error al procesar el archivo CSV: ' + err.message);
+                } finally {
+                    event.target.value = '';
+                }
+            };
+            reader.readAsText(file);
+        }
+
         function changeDefaultUnit(unit) {
             state.defaultUnit = unit;
             document.getElementById('fuelUnit').value = unit;
@@ -854,6 +1210,7 @@
             if (v && odometer > v.odometer) v.odometer = odometer;
 
             saveState();
+            renderHeaderVehicles();
             
             document.getElementById('expenseForm').reset();
             document.getElementById('dateInput').value = getTodayLocal();
@@ -916,13 +1273,12 @@
                 if (r.category === 'gasolina') {
                     const amt = r.fuelAmount || 0;
                     const liters = r.fuelUnit === 'Gal' ? amt * 3.78541 : amt;
-                    const gallons = r.fuelUnit === 'Lts' ? amt / 3.78541 : amt;
 
                     if (amt > 0) {
                         info.unitPrice = r.baseCost / amt;
                     }
 
-                    const isFull = r.fullTank !== false; // default true para registros viejos
+                    const isFull = r.fullTank !== false;
 
                     if (!lastFullFuelRecord) {
                         if (isFull) {
@@ -971,8 +1327,6 @@
                         tallerCost: 0,
                         minOdo: r.odometer,
                         maxOdo: r.odometer,
-                        segDistSum: 0,
-                        segLitersSum: 0,
                         effValues: []
                     };
                 }
@@ -993,7 +1347,6 @@
             const sortedMonths = Object.keys(monthMap).sort();
             sortedMonths.forEach((ym, i) => {
                 const m = monthMap[ym];
-                // Distancia del mes: diferencia entre máximo odómetro del mes y el odómetro de cierre del mes anterior (o minOdo del mismo mes)
                 const prevOdo = i > 0 ? monthMap[sortedMonths[i - 1]].maxOdo : m.minOdo;
                 m.distance = Math.max(0, m.maxOdo - prevOdo);
                 m.avgLiters100 = m.effValues.length > 0
@@ -1004,9 +1357,6 @@
                     const prevM = monthMap[sortedMonths[i - 1]];
                     if (prevM.totalCost > 0) {
                         m.expenseDiffPct = ((m.totalCost - prevM.totalCost) / prevM.totalCost) * 100;
-                    }
-                    if (m.avgLiters100 !== null && prevM.avgLiters100 !== null && prevM.avgLiters100 > 0) {
-                        m.effDiffPct = ((m.avgLiters100 - prevM.avgLiters100) / prevM.avgLiters100) * 100;
                     }
                 }
             });
@@ -1058,10 +1408,9 @@
             let html = '';
             let currentYm = null;
 
-            records.forEach((r, idx) => {
+            records.forEach((r) => {
                 const ym = (r.date || '').slice(0, 7);
 
-                // Insertar tarjeta resumen mensual cada vez que cambia el mes
                 if (ym && ym !== currentYm) {
                     currentYm = ym;
                     const m = monthMap[ym];
@@ -1082,11 +1431,9 @@
 
                         html += `
                         <div class="relative flex items-stretch">
-                            <!-- Columna Carretera -->
                             <div class="w-12 shrink-0 flex justify-center relative">
                                 <div class="w-3 road-line h-full"></div>
                             </div>
-                            <!-- Tarjeta Resumen Mensual -->
                             <div class="flex-1 py-2.5 pr-3.5">
                                 <div class="bg-slate-50 border border-slate-200/90 rounded-xl p-3 shadow-2xs">
                                     <div class="text-[10px] font-bold tracking-wider text-slate-400 uppercase mb-1">${formatMonthHeader(ym)}</div>
@@ -1108,7 +1455,6 @@
                 const isExpanded = expandedRecordId === r.id;
                 const isGas = r.category === 'gasolina';
 
-                // Subtítulo compacto estilo Fuelio
                 let subtitleParts = [`${r.odometer.toLocaleString()} km`];
                 if (isGas) {
                     if (calc.liters100 !== null) {
@@ -1127,7 +1473,6 @@
                     else if (r.invoice && r.invoice !== 'S/N') subtitleParts.push(`Fact. ${r.invoice}`);
                 }
 
-                // Contenido desplegable (Acordeón estilo captura)
                 let accordionHtml = '';
                 if (isExpanded) {
                     const unitPriceStr = calc.unitPrice ? `${sym}${calc.unitPrice.toFixed(2)}/${r.fuelUnit || 'Gal'}` : '';
@@ -1170,13 +1515,18 @@
                             <span class="font-semibold text-slate-800">${r.station}</span>
                         </div>` : ''}
 
+                        ${r.notes && isGas ? `
+                        <div class="flex items-center justify-between text-slate-600">
+                            <span>Nota</span>
+                            <span class="font-semibold text-slate-700 text-right max-w-[190px] truncate">${r.notes}</span>
+                        </div>` : ''}
+
                         ${r.invoice && r.invoice !== 'S/N' ? `
                         <div class="flex items-center justify-between text-slate-600">
                             <span>Nº Comprobante</span>
                             <span class="font-semibold text-slate-800">${r.invoice}</span>
                         </div>` : ''}
 
-                        <!-- Barra inferior de iconos: Borrar, Editar, Ver Ficha Completa -->
                         <div class="pt-2.5 mt-1 border-t border-slate-100 flex items-center justify-end gap-5 text-slate-500">
                             <button onclick="deleteRecordDirect(${r.id})" title="Borrar" class="p-1.5 hover:text-red-600 transition-colors flex items-center gap-1 text-[11px] font-semibold">
                                 <i data-lucide="trash-2" class="w-4 h-4"></i>
@@ -1194,7 +1544,6 @@
 
                 html += `
                 <div onclick="toggleExpandRecord(${r.id})" class="relative flex items-stretch cursor-pointer hover:bg-slate-50/80 transition-colors">
-                    <!-- Columna Carretera + Nodo Circular -->
                     <div class="w-12 shrink-0 flex flex-col items-center relative">
                         <div class="w-3 road-line flex-1"></div>
                         <div class="w-8 h-8 rounded-full flex items-center justify-center shrink-0 z-10 shadow-sm border-2 border-white ${isGas ? 'bg-amber-500 text-white' : 'bg-blue-600 text-white'}">
@@ -1203,7 +1552,6 @@
                         <div class="w-3 road-line flex-1"></div>
                     </div>
 
-                    <!-- Contenido del Evento -->
                     <div class="flex-1 py-3.5 pr-3.5 border-b border-slate-100">
                         <div class="flex items-start justify-between gap-2">
                             <div>
@@ -1459,6 +1807,7 @@
             if (v && odometer > v.odometer) v.odometer = odometer;
 
             saveState();
+            renderHeaderVehicles();
             renderHistory();
             renderSummary();
             openRecordModal(activeModalRecordId, false);
@@ -1591,7 +1940,7 @@
                 return;
             }
             sel.innerHTML = state.vehicles.map(v => 
-                `<option value="${v.plate}" ${v.plate === state.activeVehiclePlate ? 'selected' : ''}>${v.plate} · ${v.model} (${v.odometer} km)</option>`
+                `<option value="${v.plate}" ${v.plate === state.activeVehiclePlate ? 'selected' : ''}>${v.plate} · ${v.model} (${v.odometer.toLocaleString()} km)</option>`
             ).join('');
         }
 
@@ -1715,12 +2064,13 @@
         function renderVehicles() {
             const container = document.getElementById('vehiclesList');
             if (state.vehicles.length === 0) {
-                container.innerHTML = `<div class="bg-white p-6 rounded-xl text-center text-slate-400 text-xs border border-slate-200">No hay vehículos registrados. Toca "+ Agregar" para crear uno.</div>`;
+                container.innerHTML = `<div class="bg-white p-6 rounded-xl text-center text-slate-400 text-xs border border-slate-200">No hay vehículos registrados. Toca "+ Agregar" para crear uno o importa un CSV desde Ajustes.</div>`;
                 return;
             }
 
             container.innerHTML = state.vehicles.map(v => {
                 const isActive = v.plate === state.activeVehiclePlate;
+                const recCount = state.records.filter(r => r.plate === v.plate).length;
                 return `
                 <div class="bg-white p-3.5 rounded-xl border ${isActive ? 'border-blue-400 ring-1 ring-blue-100' : 'border-slate-200'} shadow-sm flex items-center justify-between gap-2">
                     <div onclick="switchVehicle('${v.plate}')" class="flex-1 cursor-pointer">
@@ -1729,7 +2079,7 @@
                             ${isActive ? '<span class="text-[9px] bg-blue-100 text-blue-700 font-bold px-1.5 py-0.5 rounded">Activo</span>' : ''}
                         </div>
                         <div class="text-xs text-slate-600 font-medium">${v.model || 'Sin modelo especificado'}</div>
-                        <div class="text-[10px] text-slate-400 mt-0.5">Asignado: ${v.driver || 'No asignado'} • <span class="font-bold text-blue-600">${v.odometer} Km</span></div>
+                        <div class="text-[10px] text-slate-400 mt-0.5">${recCount} reg. • <span class="font-bold text-blue-600">${v.odometer.toLocaleString()} Km</span>${v.driver ? ' • ' + v.driver : ''}</div>
                     </div>
                     <div class="flex items-center gap-1.5">
                         <button onclick="editVehicle('${v.plate}')" title="Editar vehículo" class="p-2 bg-slate-100 hover:bg-blue-50 text-slate-600 hover:text-blue-600 rounded-lg border border-slate-200 transition-colors flex items-center gap-1 text-xs font-semibold">
@@ -1748,13 +2098,15 @@
         }
 
         function exportToCSV() {
+            const vObj = state.vehicles.find(v => v.plate === state.activeVehiclePlate);
+            const modelName = vObj ? vObj.model : state.activeVehiclePlate;
             const recs = state.records.filter(r => r.plate === state.activeVehiclePlate);
-            let csv = 'ID,Placa,Fecha,Categoria,Odometro,MontoBase,MonedaTx,Volumen,Unidad,TanqueLleno,Estacion,Factura\n';
+            let csv = 'ID,Placa,Vehiculo,Fecha,Categoria,Odometro,MontoBase,MonedaTx,Volumen,Unidad,TipoCombustible,TanqueLleno,Estacion,Factura,Notas\n';
             recs.forEach(r => {
-                csv += `${r.id},${r.plate},${r.date},${r.category},${r.odometer},${r.baseCost},${r.txCurrency},${r.fuelAmount || 0},${r.fuelUnit || ''},${r.fullTank !== false ? 'Si' : 'No'},"${r.station || ''}",${r.invoice}\n`;
+                csv += `${r.id},${r.plate},"${modelName}",${r.date},${r.category},${r.odometer},${r.baseCost},${r.txCurrency},${r.fuelAmount || 0},${r.fuelUnit || ''},${r.fuelType || 'Regular'},${r.fullTank !== false ? 'Si' : 'No'},"${r.station || ''}",${r.invoice},"${(r.notes || '').replace(/"/g, '""')}"\n`;
             });
 
-            const blob = new Blob([csv], { type: 'text/csv' });
+            const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
             const url = window.URL.createObjectURL(blob);
             const a = document.createElement('a');
             a.href = url;
