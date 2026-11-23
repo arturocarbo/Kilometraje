@@ -48,12 +48,54 @@
 </head>
 <body class="text-slate-800 pb-24 select-none">
 
+  <!-- ==================== PANTALLA DE INICIO DE SESIÓN ==================== -->
+  <div id="loginScreen" class="fixed inset-0 bg-slate-900/95 backdrop-blur-md z-50 flex items-center justify-center p-5">
+    <div class="bg-white w-full max-w-sm rounded-3xl p-6 shadow-2xl space-y-5 animate-fade">
+      <div class="text-center space-y-1.5">
+        <div class="w-14 h-14 rounded-2xl bg-teal-700 text-white flex items-center justify-center mx-auto shadow-md text-2xl">
+          <i class="fa-solid fa-car-side"></i>
+        </div>
+        <h1 class="text-xl font-extrabold text-slate-800 pt-1">AseaL Flota</h1>
+        <p class="text-xs text-slate-500">Ingresa tu Flota y Contraseña para sincronizar en tiempo real</p>
+      </div>
+
+      <form id="loginForm" onsubmit="handleLogin(event)" class="space-y-3.5">
+        <div>
+          <label class="block text-xs font-bold text-slate-600 mb-1">Flota / Usuario</label>
+          <div class="relative">
+            <i class="fa-solid fa-users text-slate-400 text-xs absolute left-3.5 top-3.5"></i>
+            <input type="text" id="loginFleetInput" required autocomplete="username" placeholder="Ej: familia"
+              class="w-full text-sm border border-slate-200 rounded-xl pl-9 pr-3 py-2.5 font-semibold focus:outline-none focus:border-teal-600" />
+          </div>
+          <p class="text-[10px] text-slate-400 mt-1">Escribe solo el nombre (ej. <strong>familia</strong>) o el correo completo.</p>
+        </div>
+
+        <div>
+          <label class="block text-xs font-bold text-slate-600 mb-1">Contraseña</label>
+          <div class="relative">
+            <i class="fa-solid fa-lock text-slate-400 text-xs absolute left-3.5 top-3.5"></i>
+            <input type="password" id="loginPassInput" required autocomplete="current-password" placeholder="••••••••"
+              class="w-full text-sm border border-slate-200 rounded-xl pl-9 pr-3 py-2.5 font-semibold focus:outline-none focus:border-teal-600" />
+          </div>
+        </div>
+
+        <p id="loginErrorMsg" class="hidden text-xs text-rose-600 font-semibold bg-rose-50 p-2.5 rounded-xl border border-rose-100"></p>
+
+        <button type="submit" id="loginSubmitBtn"
+          class="w-full bg-teal-700 hover:bg-teal-800 text-white font-bold py-3 rounded-2xl shadow-md active:scale-[0.99] transition">
+          Entrar a la Flota
+        </button>
+      </form>
+    </div>
+  </div>
+
   <!-- HEADER SUPERIOR -->
   <header class="bg-teal-700 text-white sticky top-0 z-30 shadow-md">
     <div class="max-w-lg mx-auto px-4 pt-3 pb-2.5 flex items-center justify-between gap-2">
       <div class="flex items-center gap-2.5 flex-1 min-w-0">
-        <div class="w-10 h-10 rounded-full bg-white/15 flex items-center justify-center shrink-0 border border-white/25">
+        <div class="w-10 h-10 rounded-full bg-white/15 flex items-center justify-center shrink-0 border border-white/25 relative">
           <i class="fa-solid fa-car-side text-lg"></i>
+          <span id="syncDot" title="Sincronizado en la nube" class="w-2.5 h-2.5 rounded-full bg-emerald-400 border-2 border-teal-700 absolute -bottom-0.5 -right-0.5"></span>
         </div>
         <div class="min-w-0 flex-1">
           <div class="relative flex items-center">
@@ -62,12 +104,12 @@
             </select>
             <i class="fa-solid fa-chevron-down text-xs text-teal-200 pointer-events-none -ml-5"></i>
           </div>
-          <p id="headerVehicleSub" class="text-xs text-teal-100 truncate">Cargando flota...</p>
+          <p id="headerVehicleSub" class="text-xs text-teal-100 truncate">Conectando...</p>
         </div>
       </div>
 
       <div class="flex items-center gap-1.5 shrink-0">
-        <button type="button" onclick="openSettingsModal()" title="Ajustes, Importar CSV y Backup"
+        <button type="button" onclick="openSettingsModal()" title="Ajustes, Importar CSV y Sesión"
           class="w-9 h-9 rounded-full bg-white/10 hover:bg-white/20 active:scale-95 flex items-center justify-center transition">
           <i class="fa-solid fa-gear text-base"></i>
         </button>
@@ -95,6 +137,17 @@
 
   <!-- CONTENIDO PRINCIPAL -->
   <main class="max-w-lg mx-auto px-3.5 pt-3.5">
+
+    <!-- BANNER MIGRACIÓN LOCAL A NUBE -->
+    <div id="migrateBanner" class="hidden mb-3.5 bg-amber-50 border border-amber-200 rounded-2xl p-3.5 flex items-center justify-between gap-3 card-shadow animate-fade">
+      <div class="min-w-0">
+        <p class="text-xs font-extrabold text-amber-900"><i class="fa-solid fa-cloud-arrow-up mr-1"></i>Datos locales detectados</p>
+        <p id="migrateBannerText" class="text-[11px] text-amber-800 mt-0.5">Tienes registros guardados en este teléfono listos para subir a la nube.</p>
+      </div>
+      <button type="button" onclick="uploadLocalDataToCloud()" class="bg-amber-500 hover:bg-amber-600 text-white text-xs font-bold px-3 py-2 rounded-xl shrink-0 shadow-xs">
+        Subir ahora
+      </button>
+    </div>
 
     <!-- ==================== VISTA: REPORTES ==================== -->
     <section id="view-reports" class="space-y-3.5 animate-fade">
@@ -543,15 +596,25 @@
           </div>
         </div>
 
-        <div>
-          <label class="block text-xs font-semibold text-slate-600 mb-1">Notas / Observaciones</label>
-          <input type="text" id="recNotes" placeholder="Detalles adicionales..."
-            class="w-full text-sm border border-slate-200 rounded-xl px-3 py-2.5" />
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block text-xs font-semibold text-slate-600 mb-1">Registrado por</label>
+            <select id="recAuthor" class="w-full text-sm border border-slate-200 rounded-xl px-3 py-2.5 bg-white">
+              <option value="Arturo">Arturo</option>
+              <option value="Esposa">Esposa</option>
+              <option value="Otro">Otro</option>
+            </select>
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-slate-600 mb-1">Notas (Opcional)</label>
+            <input type="text" id="recNotes" placeholder="Detalles..."
+              class="w-full text-sm border border-slate-200 rounded-xl px-3 py-2.5" />
+          </div>
         </div>
 
-        <button type="submit"
+        <button type="submit" id="saveRecordBtn"
           class="w-full bg-teal-700 hover:bg-teal-800 text-white font-bold py-3 rounded-2xl shadow-md active:scale-[0.99] transition">
-          Guardar Registro
+          Guardar y Sincronizar
         </button>
       </form>
     </div>
@@ -589,29 +652,42 @@
     </div>
   </div>
 
-  <!-- ==================== MODAL: AJUSTES / IMPORTAR / BACKUP ==================== -->
+  <!-- ==================== MODAL: AJUSTES / IMPORTAR / SESIÓN ==================== -->
   <div id="settingsModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-xs z-50 hidden flex items-end sm:items-center justify-center">
     <div class="bg-white w-full max-w-lg rounded-t-3xl sm:rounded-3xl p-5 max-h-[90vh] overflow-y-auto space-y-4 animate-fade">
       <div class="flex items-center justify-between border-b border-slate-100 pb-3">
-        <h3 class="text-base font-extrabold text-slate-800"><i class="fa-solid fa-gear text-teal-700 mr-2"></i>Ajustes y Datos</h3>
+        <h3 class="text-base font-extrabold text-slate-800"><i class="fa-solid fa-gear text-teal-700 mr-2"></i>Ajustes y Sincronización</h3>
         <button type="button" onclick="closeSettingsModal()" class="w-8 h-8 rounded-full bg-slate-100 text-slate-500 flex items-center justify-center">
           <i class="fa-solid fa-xmark"></i>
         </button>
       </div>
 
+      <!-- Estado de Sesión Nube -->
+      <div class="bg-emerald-50 border border-emerald-200 rounded-2xl p-4 flex items-center justify-between gap-2">
+        <div class="min-w-0">
+          <p class="text-xs font-extrabold text-emerald-900"><i class="fa-solid fa-cloud-check mr-1.5"></i>Nube Activa en Tiempo Real</p>
+          <p id="activeFleetEmail" class="text-[11px] text-emerald-700 truncate mt-0.5">Conectado</p>
+        </div>
+        <button type="button" onclick="handleLogout()" class="bg-white border border-rose-200 text-rose-600 text-xs font-bold px-3 py-2 rounded-xl shrink-0">
+          Cerrar Sesión
+        </button>
+      </div>
+
+      <!-- Importar CSV -->
       <div class="bg-teal-50/70 border border-teal-100 rounded-2xl p-4 space-y-2.5">
         <h4 class="text-sm font-bold text-teal-900"><i class="fa-solid fa-file-csv mr-1.5"></i>Importar Historial (CSV)</h4>
-        <p class="text-xs text-teal-800">Sube tu archivo CSV (detecta automáticamente las columnas Placa, Vehículo, Fecha, Odómetro, Volumen y Monto).</p>
+        <p class="text-xs text-teal-800">Sube tu archivo CSV y se sincronizará automáticamente con todos los celulares conectados a esta flota.</p>
         <div class="space-y-2">
           <label class="block text-[11px] font-semibold text-teal-900">Asignar a vehículo (opcional, si el CSV no trae Placa):</label>
           <select id="importTargetVehicle" class="w-full text-xs border border-teal-200 rounded-xl px-3 py-2 bg-white">
             <option value="AUTO">Detectar automáticamente desde el CSV</option>
           </select>
         </div>
-        <input type="file" id="csvFileInput" accept=".csv" onchange="handleCSVImport(event)"
+        <input type="file" id="csvFileInput" onchange="handleCSVImport(event)"
           class="block w-full text-xs text-slate-600 file:mr-3 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-bold file:bg-teal-700 file:text-white hover:file:bg-teal-800 cursor-pointer" />
       </div>
 
+      <!-- Backup JSON -->
       <div class="bg-slate-50 border border-slate-200 rounded-2xl p-4 space-y-2.5">
         <h4 class="text-sm font-bold text-slate-800"><i class="fa-solid fa-database mr-1.5"></i>Copia de Seguridad (JSON)</h4>
         <div class="grid grid-cols-2 gap-2.5">
@@ -630,16 +706,37 @@
   <!-- TOAST NOTIFICACIÓN -->
   <div id="toast" class="fixed top-16 left-1/2 -translate-x-1/2 bg-slate-900 text-white text-xs font-semibold px-4 py-2.5 rounded-full shadow-lg z-50 hidden"></div>
 
-  <script>
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+    import { getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+    import {
+      getFirestore, collection, doc, setDoc, deleteDoc, onSnapshot, writeBatch, enableIndexedDbPersistence
+    } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyBsFNXUkiefkEop7NAWRalLTu6d4qTKfs4",
+      authDomain: "flotilla-47f86.firebaseapp.com",
+      projectId: "flotilla-47f86",
+      storageBucket: "flotilla-47f86.firebasestorage.app",
+      messagingSenderId: "708838512005",
+      appId: "1:708838512005:web:b31c06d4f4c149310d20ec"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const db = getFirestore(app);
+
+    enableIndexedDbPersistence(db).catch(() => {});
+
     const STORAGE_VEHICLES = 'aseal_vehicles_v1';
     const STORAGE_RECORDS = 'aseal_records_v1';
 
-    let vehicles = JSON.parse(localStorage.getItem(STORAGE_VEHICLES)) || [
-      { plate: 'CRETA-GRAND-2024', name: 'Hyundai Creta Grand 2024', odometer: 17532 },
-      { plate: 'CRETA-2024', name: 'Hyundai Creta 2024', odometer: 8098 }
-    ];
-    let records = JSON.parse(localStorage.getItem(STORAGE_RECORDS)) || [];
+    let currentUser = null;
+    let unsubVehicles = null;
+    let unsubRecords = null;
 
+    let vehicles = [];
+    let records = [];
     let selectedVehicle = localStorage.getItem('aseal_selected_vehicle') || 'ALL';
     let currentMainView = 'reports';
     let currentReportSubTab = 'general';
@@ -648,11 +745,6 @@
     let chartGeneralInstance = null;
     let chartFuelPriceInstance = null;
 
-    function persistData() {
-      localStorage.setItem(STORAGE_VEHICLES, JSON.stringify(vehicles));
-      localStorage.setItem(STORAGE_RECORDS, JSON.stringify(records));
-    }
-
     function showToast(msg) {
       const t = document.getElementById('toast');
       t.textContent = msg;
@@ -660,14 +752,134 @@
       setTimeout(() => t.classList.add('hidden'), 3000);
     }
 
-    function initApp() {
-      populateVehicleSelectors();
-      renderAll();
-      if ('serviceWorker' in navigator) {
-        navigator.serviceWorker.register('./sw.js').catch(() => {});
+    // ==================== AUTENTICACIÓN POR FLOTA ====================
+    window.handleLogin = async function(e) {
+      e.preventDefault();
+      const rawFleet = document.getElementById('loginFleetInput').value.trim().toLowerCase();
+      const password = document.getElementById('loginPassInput').value;
+      const errEl = document.getElementById('loginErrorMsg');
+      const btn = document.getElementById('loginSubmitBtn');
+
+      const email = rawFleet.includes('@') ? rawFleet : `${rawFleet}@aseal.app`;
+      errEl.classList.add('hidden');
+      btn.disabled = true;
+      btn.textContent = 'Conectando...';
+
+      try {
+        await signInWithEmailAndPassword(auth, email, password);
+      } catch (err) {
+        errEl.textContent = 'Flota o contraseña incorrecta. Verifica los datos e intenta de nuevo.';
+        errEl.classList.remove('hidden');
+      } finally {
+        btn.disabled = false;
+        btn.textContent = 'Entrar a la Flota';
+      }
+    };
+
+    window.handleLogout = async function() {
+      if (!confirm('¿Cerrar sesión en este dispositivo?')) return;
+      if (unsubVehicles) unsubVehicles();
+      if (unsubRecords) unsubRecords();
+      await signOut(auth);
+      closeSettingsModal();
+    };
+
+    onAuthStateChanged(auth, (user) => {
+      currentUser = user;
+      const loginScreen = document.getElementById('loginScreen');
+      if (!user) {
+        loginScreen.classList.remove('hidden');
+        return;
+      }
+
+      loginScreen.classList.add('hidden');
+      const fleetAlias = user.email.replace('@aseal.app', '').toUpperCase();
+      document.getElementById('activeFleetEmail').textContent = `Flota: ${fleetAlias} (${user.email})`;
+
+      checkLocalMigrationData();
+      startRealtimeSync(user.uid);
+    });
+
+    // ==================== SINCRONIZACIÓN FIRESTORE EN TIEMPO REAL ====================
+    function startRealtimeSync(uid) {
+      if (unsubVehicles) unsubVehicles();
+      if (unsubRecords) unsubRecords();
+
+      const vehCol = collection(db, 'flotas', uid, 'vehiculos');
+      const recCol = collection(db, 'flotas', uid, 'registros');
+
+      unsubVehicles = onSnapshot(vehCol, (snapshot) => {
+        vehicles = snapshot.docs.map(d => ({ plate: d.id, ...d.data() }));
+        if (!vehicles.length) {
+          vehicles = [
+            { plate: 'CRETA-GRAND-2024', name: 'Hyundai Creta Grand 2024', odometer: 17532 },
+            { plate: 'CRETA-2024', name: 'Hyundai Creta 2024', odometer: 8098 }
+          ];
+        }
+        populateVehicleSelectors();
+        renderAll();
+      });
+
+      unsubRecords = onSnapshot(recCol, (snapshot) => {
+        records = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
+        renderAll();
+      });
+    }
+
+    // ==================== MIGRACIÓN DE DATOS LOCALES PREVIOS ====================
+    function checkLocalMigrationData() {
+      const localRecs = JSON.parse(localStorage.getItem(STORAGE_RECORDS) || '[]');
+      const banner = document.getElementById('migrateBanner');
+      if (localRecs.length > 0) {
+        document.getElementById('migrateBannerText').textContent = `Tienes ${localRecs.length} registros guardados en este teléfono listos para subir a la nube.`;
+        banner.classList.remove('hidden');
+      } else {
+        banner.classList.add('hidden');
       }
     }
 
+    window.uploadLocalDataToCloud = async function() {
+      if (!currentUser) return;
+      const localVehs = JSON.parse(localStorage.getItem(STORAGE_VEHICLES) || '[]');
+      const localRecs = JSON.parse(localStorage.getItem(STORAGE_RECORDS) || '[]');
+      if (!localRecs.length && !localVehs.length) return;
+
+      showToast('Subiendo registros a la nube...');
+      const batch = writeBatch(db);
+      const uid = currentUser.uid;
+
+      localVehs.forEach(v => {
+        const ref = doc(db, 'flotas', uid, 'vehiculos', v.plate);
+        batch.set(ref, { name: v.name, odometer: Number(v.odometer) || 0 }, { merge: true });
+      });
+
+      localRecs.forEach(r => {
+        const recId = String(r.id || Date.now() + Math.random());
+        const ref = doc(db, 'flotas', uid, 'registros', recId);
+        batch.set(ref, {
+          plate: r.plate,
+          date: r.date,
+          category: r.category || 'gasolina',
+          odometer: Number(r.odometer) || 0,
+          amount: Number(r.amount) || 0,
+          volume: Number(r.volume) || 0,
+          fuelType: r.fuelType || 'Regular',
+          fullTank: r.fullTank !== false,
+          serviceType: r.serviceType || '',
+          provider: r.provider || '',
+          author: r.author || 'Arturo',
+          notes: r.notes || ''
+        }, { merge: true });
+      });
+
+      await batch.commit();
+      localStorage.removeItem(STORAGE_RECORDS);
+      localStorage.removeItem(STORAGE_VEHICLES);
+      document.getElementById('migrateBanner').classList.add('hidden');
+      showToast(`¡${localRecs.length} registros sincronizados en la nube!`);
+    };
+
+    // ==================== SELECTORES Y NAVEGACIÓN ====================
     function populateVehicleSelectors() {
       const globalSel = document.getElementById('globalVehicleSelect');
       const recSel = document.getElementById('recVehicle');
@@ -694,21 +906,21 @@
       const sub = document.getElementById('headerVehicleSub');
       if (selectedVehicle === 'ALL') {
         const totalKm = vehicles.reduce((acc, v) => acc + (Number(v.odometer) || 0), 0);
-        sub.textContent = `${vehicles.length} vehículos · ${totalKm.toLocaleString()} km acumulados`;
+        sub.textContent = `${vehicles.length} vehículos · ${totalKm.toLocaleString()} km · En vivo`;
       } else {
         const v = vehicles.find(x => x.plate === selectedVehicle);
-        sub.textContent = v ? `${v.plate} · ${Number(v.odometer).toLocaleString()} km` : '';
+        sub.textContent = v ? `${v.plate} · ${Number(v.odometer).toLocaleString()} km · En vivo` : '';
       }
     }
 
-    function onVehicleChange() {
+    window.onVehicleChange = function() {
       selectedVehicle = document.getElementById('globalVehicleSelect').value;
       localStorage.setItem('aseal_selected_vehicle', selectedVehicle);
       updateHeaderSub();
       renderAll();
-    }
+    };
 
-    function switchMainView(view) {
+    window.switchMainView = function(view) {
       currentMainView = view;
       ['reports', 'history', 'vehicles'].forEach(v => {
         document.getElementById(`view-${v}`).classList.toggle('hidden', v !== view);
@@ -723,9 +935,9 @@
       });
       document.getElementById('reportSubTabs').classList.toggle('hidden', view !== 'reports');
       renderAll();
-    }
+    };
 
-    function switchReportSubTab(tab) {
+    window.switchReportSubTab = function(tab) {
       currentReportSubTab = tab;
       ['general', 'refueling', 'service'].forEach(t => {
         const btn = document.getElementById(`subtab-${t}`);
@@ -741,13 +953,13 @@
         }
       });
       renderReports();
-    }
+    };
 
-    function toggleDateFilterPanel() {
+    window.toggleDateFilterPanel = function() {
       document.getElementById('dateFilterPanel').classList.toggle('hidden');
-    }
+    };
 
-    function setQuickDateFilter(mode) {
+    window.setQuickDateFilter = function(mode) {
       const startInput = document.getElementById('filterStartDate');
       const endInput = document.getElementById('filterEndDate');
       const now = new Date();
@@ -766,8 +978,9 @@
         endInput.value = todayStr;
       }
       renderReports();
-    }
+    };
 
+    // ==================== REPORTES Y GRÁFICOS ====================
     function getFilteredRecords() {
       const start = document.getElementById('filterStartDate').value;
       const end = document.getElementById('filterEndDate').value;
@@ -807,7 +1020,7 @@
       return { totalDist, days: diffDays, minDate, maxDate };
     }
 
-    function renderReports() {
+    window.renderReports = function() {
       const allFiltered = getFilteredRecords();
       const fuelList = allFiltered.filter(r => r.category === 'gasolina');
       const srvList = allFiltered.filter(r => r.category !== 'gasolina');
@@ -905,7 +1118,7 @@
       document.getElementById('srv-avg-visit').textContent = srvList.length ? `$${(totalSrvCost / srvList.length).toFixed(2)}` : '$0.00';
 
       renderServiceDetails(srvList, totalSrvCost);
-    }
+    };
 
     function renderServiceDetails(srvList, totalSrvCost) {
       const breakdownEl = document.getElementById('srv-breakdown-list');
@@ -1022,7 +1235,8 @@
       });
     }
 
-    function setHistoryFilter(f) {
+    // ==================== HISTORIAL Y VEHÍCULOS ====================
+    window.setHistoryFilter = function(f) {
       currentHistoryFilter = f;
       ['all', 'gasolina', 'mantenimiento'].forEach(k => {
         const btn = document.getElementById(`hfilter-${k}`);
@@ -1033,7 +1247,7 @@
         }
       });
       renderHistory();
-    }
+    };
 
     function renderHistory() {
       const container = document.getElementById('historyListContainer');
@@ -1050,6 +1264,7 @@
       container.innerHTML = list.map(r => {
         const isFuel = r.category === 'gasolina';
         const priceGal = (isFuel && Number(r.volume) > 0) ? `$${(Number(r.amount) / Number(r.volume)).toFixed(2)}/gal` : '';
+        const authorBadge = r.author ? ` · <span class="text-teal-700 font-semibold">${r.author}</span>` : '';
         return `
           <div class="bg-white rounded-2xl p-3.5 card-shadow border border-slate-100 flex items-center justify-between gap-3">
             <div class="flex items-center gap-3 min-w-0">
@@ -1061,7 +1276,7 @@
                   ${isFuel ? `Combustible (${Number(r.volume).toFixed(2)} gal)` : (r.serviceType || 'Servicio')}
                 </p>
                 <p class="text-[11px] text-slate-400 truncate">
-                  ${r.date} · ${Number(r.odometer).toLocaleString()} km · <span class="font-semibold text-slate-500">${r.plate}</span>
+                  ${r.date} · ${Number(r.odometer).toLocaleString()} km · <span class="font-semibold text-slate-500">${r.plate}</span>${authorBadge}
                 </p>
                 ${r.notes ? `<p class="text-[11px] text-slate-400 italic truncate">${r.notes}</p>` : ''}
               </div>
@@ -1108,22 +1323,25 @@
       renderVehicles();
     }
 
-    function openRecordModal() {
+    // ==================== MODALES Y CRUD EN FIRESTORE ====================
+    window.openRecordModal = function() {
       document.getElementById('recordForm').reset();
       document.getElementById('recId').value = '';
       document.getElementById('recDate').value = new Date().toISOString().split('T')[0];
       if (selectedVehicle !== 'ALL') {
         document.getElementById('recVehicle').value = selectedVehicle;
       }
+      const savedAuthor = localStorage.getItem('aseal_last_author');
+      if (savedAuthor) document.getElementById('recAuthor').value = savedAuthor;
       setRecordCategory(currentReportSubTab === 'service' ? 'mantenimiento' : 'gasolina');
       document.getElementById('recordModal').classList.remove('hidden');
-    }
+    };
 
-    function closeRecordModal() {
+    window.closeRecordModal = function() {
       document.getElementById('recordModal').classList.add('hidden');
-    }
+    };
 
-    function setRecordCategory(cat) {
+    window.setRecordCategory = function(cat) {
       document.getElementById('recCategory').value = cat;
       const isFuel = cat === 'gasolina';
       document.getElementById('fuelFieldsGroup').classList.toggle('hidden', !isFuel);
@@ -1135,24 +1353,28 @@
       document.getElementById('btnCatSrv').className = !isFuel
         ? 'py-2 rounded-xl text-xs font-bold bg-stone-700 text-white shadow-xs transition'
         : 'py-2 rounded-xl text-xs font-bold text-slate-600 transition';
-    }
+    };
 
-    function calcFuelHelper() {
+    window.calcFuelHelper = function() {
       const amt = parseFloat(document.getElementById('recAmount').value) || 0;
       const vol = parseFloat(document.getElementById('recVolume').value) || 0;
       const ppg = vol > 0 ? (amt / vol).toFixed(3) : '0.00';
       document.getElementById('fuelPricePreview').innerHTML = `Precio calculado: <strong>$${ppg} / gal</strong>`;
-    }
+    };
 
-    function saveRecord(e) {
+    window.saveRecord = async function(e) {
       e.preventDefault();
+      if (!currentUser) return;
+
       const plate = document.getElementById('recVehicle').value;
       const category = document.getElementById('recCategory').value;
       const odometer = parseFloat(document.getElementById('recOdometer').value) || 0;
       const amount = parseFloat(document.getElementById('recAmount').value) || 0;
+      const author = document.getElementById('recAuthor').value;
+      localStorage.setItem('aseal_last_author', author);
 
+      const recId = String(Date.now());
       const newRec = {
-        id: String(Date.now()),
         plate,
         date: document.getElementById('recDate').value,
         category,
@@ -1163,86 +1385,85 @@
         fullTank: document.getElementById('recFullTank').checked,
         serviceType: category !== 'gasolina' ? document.getElementById('recServiceType').value : '',
         provider: category !== 'gasolina' ? document.getElementById('recProvider').value : '',
+        author,
         notes: document.getElementById('recNotes').value
       };
 
-      records.push(newRec);
+      const uid = currentUser.uid;
+      await setDoc(doc(db, 'flotas', uid, 'registros', recId), newRec);
 
       const veh = vehicles.find(v => v.plate === plate);
       if (veh && odometer > Number(veh.odometer)) {
-        veh.odometer = odometer;
+        await setDoc(doc(db, 'flotas', uid, 'vehiculos', plate), {
+          name: veh.name,
+          odometer
+        }, { merge: true });
       }
 
-      persistData();
-      populateVehicleSelectors();
       closeRecordModal();
-      renderAll();
-      showToast('Registro guardado correctamente');
-    }
+      showToast('Guardado y sincronizado en vivo');
+    };
 
-    function deleteRecord(id) {
-      if (!confirm('¿Eliminar este registro?')) return;
-      records = records.filter(r => String(r.id) !== String(id));
-      persistData();
-      renderAll();
+    window.deleteRecord = async function(id) {
+      if (!currentUser || !confirm('¿Eliminar este registro de todos los dispositivos?')) return;
+      await deleteDoc(doc(db, 'flotas', currentUser.uid, 'registros', String(id)));
       showToast('Registro eliminado');
-    }
+    };
 
-    function openVehicleModal() {
+    window.openVehicleModal = function() {
       document.getElementById('vehicleModal').classList.remove('hidden');
-    }
-    function closeVehicleModal() {
+    };
+    window.closeVehicleModal = function() {
       document.getElementById('vehicleModal').classList.add('hidden');
-    }
+    };
 
-    function saveVehicle(e) {
+    window.saveVehicle = async function(e) {
       e.preventDefault();
+      if (!currentUser) return;
       const plate = document.getElementById('vehPlate').value.trim().toUpperCase();
       const name = document.getElementById('vehName').value.trim();
       const odometer = parseFloat(document.getElementById('vehOdo').value) || 0;
 
-      const existing = vehicles.find(v => v.plate === plate);
-      if (existing) {
-        existing.name = name;
-        existing.odometer = odometer;
-      } else {
-        vehicles.push({ plate, name, odometer });
-      }
-      persistData();
-      populateVehicleSelectors();
+      await setDoc(doc(db, 'flotas', currentUser.uid, 'vehiculos', plate), {
+        name,
+        odometer
+      }, { merge: true });
+
       closeVehicleModal();
-      renderAll();
-      showToast('Vehículo guardado');
-    }
+      showToast('Vehículo sincronizado');
+    };
 
-    function deleteVehicle(plate) {
-      if (!confirm(`¿Eliminar vehículo ${plate}?`)) return;
-      vehicles = vehicles.filter(v => v.plate !== plate);
-      persistData();
-      populateVehicleSelectors();
-      renderAll();
-    }
+    window.deleteVehicle = async function(plate) {
+      if (!currentUser || !confirm(`¿Eliminar vehículo ${plate}?`)) return;
+      await deleteDoc(doc(db, 'flotas', currentUser.uid, 'vehiculos', plate));
+      showToast('Vehículo eliminado');
+    };
 
-    function openSettingsModal() {
+    // ==================== AJUSTES: CSV & BACKUP ====================
+    window.openSettingsModal = function() {
       document.getElementById('settingsModal').classList.remove('hidden');
-    }
-    function closeSettingsModal() {
+    };
+    window.closeSettingsModal = function() {
       document.getElementById('settingsModal').classList.add('hidden');
-    }
+    };
 
-    function handleCSVImport(event) {
+    window.handleCSVImport = function(event) {
       const file = event.target.files[0];
-      if (!file) return;
+      if (!file || !currentUser) return;
       const targetPlate = document.getElementById('importTargetVehicle').value;
 
       const reader = new FileReader();
-      reader.onload = function(e) {
+      reader.onload = async function(e) {
         const text = e.target.result;
         const lines = text.split(/\r?\n/).filter(l => l.trim());
         if (lines.length < 2) return alert('El CSV está vacío.');
 
         const headers = lines[0].replace(/^\uFEFF/, '').split(',').map(h => h.trim().toLowerCase());
+        const batch = writeBatch(db);
+        const uid = currentUser.uid;
         let added = 0;
+
+        const maxOdos = {};
 
         for (let i = 1; i < lines.length; i++) {
           const cols = lines[i].split(',').map(c => c.trim().replace(/^"|"$/g, ''));
@@ -1258,18 +1479,15 @@
           const catRaw = (row.categoria || 'gasolina').toLowerCase();
           const category = (catRaw.includes('serv') || catRaw.includes('mant') || catRaw.includes('taller')) ? 'mantenimiento' : 'gasolina';
 
-          let veh = vehicles.find(v => v.plate === plate);
-          if (!veh) {
-            veh = { plate, name: vehName, odometer };
-            vehicles.push(veh);
-          } else if (odometer > Number(veh.odometer)) {
-            veh.odometer = odometer;
+          if (!maxOdos[plate] || odometer > maxOdos[plate].odometer) {
+            maxOdos[plate] = { name: vehName, odometer };
           }
 
           const exists = records.some(r => r.plate === plate && r.date === date && Number(r.odometer) === odometer);
           if (!exists) {
-            records.push({
-              id: row.id || `${Date.now()}-${i}`,
+            const recId = row.id || `${Date.now()}-${i}`;
+            const ref = doc(db, 'flotas', uid, 'registros', String(recId));
+            batch.set(ref, {
               plate,
               date,
               category,
@@ -1279,26 +1497,34 @@
               fuelType: row.tipocombustible || 'Regular',
               fullTank: true,
               serviceType: category === 'mantenimiento' ? (row.tiposervicio || row.notas || 'Mantenimiento') : '',
+              author: row.autor || 'Importado',
               notes: row.notas || ''
-            });
+            }, { merge: true });
             added++;
           }
         }
 
-        persistData();
-        populateVehicleSelectors();
-        renderAll();
+        Object.entries(maxOdos).forEach(([plate, info]) => {
+          const existingVeh = vehicles.find(v => v.plate === plate);
+          const finalOdo = existingVeh ? Math.max(Number(existingVeh.odometer) || 0, info.odometer) : info.odometer;
+          batch.set(doc(db, 'flotas', uid, 'vehiculos', plate), {
+            name: existingVeh ? existingVeh.name : info.name,
+            odometer: finalOdo
+          }, { merge: true });
+        });
+
+        await batch.commit();
         closeSettingsModal();
-        showToast(`Se importaron ${added} registros correctamente`);
+        showToast(`¡${added} registros subidos y sincronizados!`);
       };
       reader.readAsText(file);
-    }
+    };
 
-    function exportCSV() {
-      const headers = ['ID', 'Placa', 'Vehiculo', 'Fecha', 'Categoria', 'Odometro', 'MontoBase', 'Volumen', 'TipoServicio', 'Notas'];
+    window.exportCSV = function() {
+      const headers = ['ID', 'Placa', 'Vehiculo', 'Fecha', 'Categoria', 'Odometro', 'MontoBase', 'Volumen', 'TipoServicio', 'Autor', 'Notas'];
       const rows = records.map(r => {
         const v = vehicles.find(x => x.plate === r.plate);
-        return [r.id, r.plate, v ? v.name : r.plate, r.date, r.category, r.odometer, r.amount, r.volume || 0, r.serviceType || '', r.notes || '']
+        return [r.id, r.plate, v ? v.name : r.plate, r.date, r.category, r.odometer, r.amount, r.volume || 0, r.serviceType || '', r.author || '', r.notes || '']
           .map(val => `"${String(val).replace(/"/g, '""')}"`).join(',');
       });
       const blob = new Blob(['\uFEFF' + [headers.join(','), ...rows].join('\n')], { type: 'text/csv;charset=utf-8;' });
@@ -1306,41 +1532,47 @@
       a.href = URL.createObjectURL(blob);
       a.download = `AseaL_Historial_${new Date().toISOString().split('T')[0]}.csv`;
       a.click();
-    }
+    };
 
-    function downloadBackupJSON() {
-      const payload = { version: 10, exportedAt: new Date().toISOString(), vehicles, records };
+    window.downloadBackupJSON = function() {
+      const payload = { version: 11, exportedAt: new Date().toISOString(), vehicles, records };
       const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
       const a = document.createElement('a');
       a.href = URL.createObjectURL(blob);
       a.download = `Backup_AseaL_Flota_${new Date().toISOString().split('T')[0]}.json`;
       a.click();
-    }
+    };
 
-    function restoreBackupJSON(event) {
+    window.restoreBackupJSON = function(event) {
       const file = event.target.files[0];
-      if (!file) return;
+      if (!file || !currentUser) return;
       const reader = new FileReader();
-      reader.onload = function(e) {
+      reader.onload = async function(e) {
         try {
           const data = JSON.parse(e.target.result);
           if (data.vehicles && data.records) {
-            vehicles = data.vehicles;
-            records = data.records;
-            persistData();
-            populateVehicleSelectors();
-            renderAll();
+            const batch = writeBatch(db);
+            const uid = currentUser.uid;
+            data.vehicles.forEach(v => {
+              batch.set(doc(db, 'flotas', uid, 'vehiculos', v.plate), { name: v.name, odometer: Number(v.odometer) || 0 }, { merge: true });
+            });
+            data.records.forEach(r => {
+              batch.set(doc(db, 'flotas', uid, 'registros', String(r.id || Date.now() + Math.random())), r, { merge: true });
+            });
+            await batch.commit();
             closeSettingsModal();
-            showToast('Backup restaurado con éxito');
+            showToast('Backup restaurado y sincronizado en la nube');
           }
         } catch (err) {
           alert('Archivo JSON inválido.');
         }
       };
       reader.readAsText(file);
-    }
+    };
 
-    window.addEventListener('DOMContentLoaded', initApp);
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('./sw.js').catch(() => {});
+    }
   </script>
 </body>
 </html>
