@@ -1,2142 +1,1390 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>AseaL - Control de Gasto Vehicular</title>
-    
-    <!-- PWA & Mobile Meta Tags -->
-    <meta name="theme-color" content="#2563eb">
-    <meta name="mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <meta name="apple-mobile-web-app-title" content="AseaL Vehicular">
-    <link rel="manifest" href="manifest.json">
-    <link rel="apple-touch-icon" href="icon.png">
-    <link rel="icon" type="image/png" href="icon.png">
-    
-    <!-- Tailwind CSS & Lucide Icons -->
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://unpkg.com/lucide@latest"></script>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    
-    <style>
-        body {
-            -webkit-tap-highlight-color: transparent;
-            user-select: none;
-            touch-action: manipulation;
-        }
-        .no-scrollbar::-webkit-scrollbar {
-            display: none;
-        }
-        .no-scrollbar {
-            -ms-overflow-style: none;
-            scrollbar-width: none;
-        }
-        /* Carretera vertical estilo Fuelio */
-        .road-line {
-            background-color: #334155;
-            background-image: linear-gradient(to bottom, #ffffff 50%, rgba(255,255,255,0) 0%);
-            background-position: center;
-            background-size: 2px 10px;
-            background-repeat: repeat-y;
-        }
-    </style>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>AseaL Flota — Control Vehicular</title>
+  <meta name="theme-color" content="#0f766e" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <link rel="manifest" href="manifest.json" />
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      background-color: #f1f5f9;
+      -webkit-tap-highlight-color: transparent;
+      overscroll-behavior-y: none;
+    }
+    .tab-active {
+      color: #0d9488;
+      border-bottom: 3px solid #0d9488;
+      font-weight: 700;
+    }
+    .nav-active {
+      color: #0d9488;
+    }
+    .card-shadow {
+      box-shadow: 0 2px 10px rgba(15, 23, 42, 0.05);
+    }
+    .no-scrollbar::-webkit-scrollbar {
+      display: none;
+    }
+    .no-scrollbar {
+      -ms-overflow-style: none;
+      scrollbar-width: none;
+    }
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(6px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    .animate-fade {
+      animation: fadeIn 0.2s ease-out forwards;
+    }
+  </style>
 </head>
-<body class="bg-slate-100 text-slate-800 font-sans antialiased min-h-screen pb-36">
+<body class="text-slate-800 pb-24 select-none">
 
-    <!-- ENCABEZADO CON LOGO ASEAL VECTORIAL INCORPORADO -->
-    <header class="bg-white text-slate-800 sticky top-0 z-30 shadow-md border-b border-slate-200 pt-safe">
-        <div class="max-w-md mx-auto px-4 py-2.5 flex items-center justify-between">
-            
-            <!-- LOGO ASEAL SVG -->
-            <div class="flex items-center space-x-2">
-                <div class="relative flex items-center justify-center">
-                    <svg class="h-9 w-auto" viewBox="0 0 200 80" fill="none" xmlns="http://www.w3.org/2000/svg">
-                        <path d="M 30 35 C 70 12, 130 12, 175 32" stroke="#2e7d32" stroke-width="6.5" stroke-linecap="round"/>
-                        <text x="22" y="58" font-family="Arial, Helvetica, sans-serif" font-weight="900" font-size="44" fill="#0265a8" letter-spacing="-1">asea</text>
-                        <text x="146" y="58" font-family="Arial, Helvetica, sans-serif" font-weight="900" font-size="44" fill="#2e7d32">L</text>
-                        <path d="M 35 55 C 80 75, 140 75, 170 58" stroke="#0265a8" stroke-width="6.5" stroke-linecap="round"/>
-                    </svg>
-                </div>
-                <span class="text-xs font-bold text-slate-400 border-l border-slate-300 pl-2">Flota</span>
+  <!-- HEADER SUPERIOR -->
+  <header class="bg-teal-700 text-white sticky top-0 z-30 shadow-md">
+    <div class="max-w-lg mx-auto px-4 pt-3 pb-2.5 flex items-center justify-between gap-2">
+      <!-- Selector de Vehículo -->
+      <div class="flex items-center gap-2.5 flex-1 min-w-0">
+        <div class="w-10 h-10 rounded-full bg-white/15 flex items-center justify-center shrink-0 border border-white/25">
+          <i class="fa-solid fa-car-side text-lg"></i>
+        </div>
+        <div class="min-w-0 flex-1">
+          <div class="relative flex items-center">
+            <select id="globalVehicleSelect" onchange="onVehicleChange()"
+              class="appearance-none bg-transparent text-white font-bold text-base pr-6 truncate focus:outline-none cursor-pointer w-full">
+            </select>
+            <i class="fa-solid fa-chevron-down text-xs text-teal-200 pointer-events-none -ml-5"></i>
+          </div>
+          <p id="headerVehicleSub" class="text-xs text-teal-100 truncate">Cargando flota...</p>
+        </div>
+      </div>
+
+      <!-- Botones Acción Header -->
+      <div class="flex items-center gap-1.5 shrink-0">
+        <button onclick="openSettingsModal()" title="Ajustes, Importar CSV y Backup"
+          class="w-9 h-9 rounded-full bg-white/10 hover:bg-white/20 active:scale-95 flex items-center justify-center transition">
+          <i class="fa-solid fa-gear text-base"></i>
+        </button>
+      </div>
+    </div>
+
+    <!-- SUB-TABS ESTILO DRIVVO (Solo visibles en Reportes) -->
+    <div id="reportSubTabs" class="bg-white text-slate-500 border-b border-slate-200">
+      <div class="max-w-lg mx-auto grid grid-cols-3 text-center text-xs tracking-wider uppercase">
+        <button id="subtab-general" onclick="switchReportSubTab('general')"
+          class="py-3 transition tab-active">
+          GENERAL
+        </button>
+        <button id="subtab-refueling" onclick="switchReportSubTab('refueling')"
+          class="py-3 transition font-semibold hover:text-slate-700">
+          COMBUSTIBLE
+        </button>
+        <button id="subtab-service" onclick="switchReportSubTab('service')"
+          class="py-3 transition font-semibold hover:text-slate-700">
+          SERVICIOS
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- CONTENIDO PRINCIPAL -->
+  <main class="max-w-lg mx-auto px-3.5 pt-3.5">
+
+    <!-- ==================== VISTA: REPORTES ==================== -->
+    <section id="view-reports" class="space-y-3.5 animate-fade">
+      <!-- Barra de Rango de Fechas y Conteo -->
+      <div class="bg-white rounded-2xl px-4 py-2.5 card-shadow border border-slate-100 flex items-center justify-between gap-2">
+        <div class="flex items-center gap-2 min-w-0">
+          <span id="reportEntriesCount" class="text-xs font-bold text-slate-700 truncate">0 registros</span>
+          <span id="reportDateRangeLabel" class="text-xs text-slate-400 truncate">(Todo el historial)</span>
+        </div>
+        <button onclick="toggleDateFilterPanel()"
+          class="w-8 h-8 rounded-xl bg-teal-50 text-teal-700 hover:bg-teal-100 flex items-center justify-center shrink-0 transition"
+          title="Filtrar por fechas">
+          <i class="fa-regular fa-calendar text-sm"></i>
+        </button>
+      </div>
+
+      <!-- Panel Desplegable Filtro Fechas -->
+      <div id="dateFilterPanel" class="hidden bg-white rounded-2xl p-3.5 card-shadow border border-slate-100 space-y-3 animate-fade">
+        <div class="grid grid-cols-2 gap-2.5">
+          <div>
+            <label class="block text-[11px] font-semibold text-slate-500 mb-1">Desde</label>
+            <input type="date" id="filterStartDate" onchange="renderReports()"
+              class="w-full text-xs border border-slate-200 rounded-xl px-2.5 py-2 focus:outline-none focus:border-teal-600" />
+          </div>
+          <div>
+            <label class="block text-[11px] font-semibold text-slate-500 mb-1">Hasta</label>
+            <input type="date" id="filterEndDate" onchange="renderReports()"
+              class="w-full text-xs border border-slate-200 rounded-xl px-2.5 py-2 focus:outline-none focus:border-teal-600" />
+          </div>
+        </div>
+        <div class="flex items-center justify-between gap-2">
+          <div class="flex gap-1.5">
+            <button onclick="setQuickDateFilter('30d')" class="text-[11px] px-2.5 py-1 rounded-lg bg-slate-100 hover:bg-slate-200 font-medium">30 días</button>
+            <button onclick="setQuickDateFilter('year')" class="text-[11px] px-2.5 py-1 rounded-lg bg-slate-100 hover:bg-slate-200 font-medium">Este año</button>
+            <button onclick="setQuickDateFilter('all')" class="text-[11px] px-2.5 py-1 rounded-lg bg-teal-50 text-teal-700 font-semibold">Todo</button>
+          </div>
+          <button onclick="toggleDateFilterPanel()" class="text-xs text-slate-400 hover:text-slate-600 font-medium">Cerrar</button>
+        </div>
+      </div>
+
+      <!-- SUB-VISTA 1: GENERAL -->
+      <div id="report-pane-general" class="space-y-3.5">
+        <div class="grid grid-cols-2 gap-3">
+          <!-- Tarjeta Balance / Gasto Total -->
+          <div class="bg-white rounded-2xl p-3.5 card-shadow border border-slate-100 flex flex-col justify-between">
+            <div class="flex items-center gap-2.5 mb-3">
+              <div class="w-9 h-9 rounded-xl bg-teal-600 text-white flex items-center justify-center shadow-sm">
+                <i class="fa-solid fa-chart-line text-sm"></i>
+              </div>
+              <span class="font-bold text-sm text-teal-700">Gasto Total</span>
             </div>
-            
-            <div class="flex items-center space-x-1.5">
-                <select id="headerUnitSelect" onchange="changeDefaultUnit(this.value)" class="bg-slate-100 text-slate-700 text-xs font-semibold px-2 py-1.5 rounded-lg border border-slate-300 outline-none">
-                    <option value="Gal">Gal</option>
-                    <option value="Lts">Lts</option>
-                </select>
-
-                <select id="headerCurrencySelect" onchange="changeBaseCurrency(this.value)" class="bg-slate-100 text-slate-700 text-xs font-semibold px-2 py-1.5 rounded-lg border border-slate-300 outline-none">
-                    <option value="USD">USD ($)</option>
-                    <option value="CRC">CRC (₡)</option>
-                    <option value="NIO">NIO (C$)</option>
-                    <option value="HNL">HNL (L)</option>
-                    <option value="GTQ">GTQ (Q)</option>
-                    <option value="MXN">MXN ($)</option>
-                    <option value="DOP">DOP (RD$)</option>
-                    <option value="PAB">PAB (B/.)</option>
-                </select>
-
-                <!-- Botón Settings (Respaldo / Importar CSV) -->
-                <button onclick="openSettingsModal()" title="Ajustes, Respaldo e Importar CSV" class="bg-slate-100 hover:bg-blue-50 text-slate-700 hover:text-blue-600 p-1.5 rounded-lg border border-slate-300 transition-colors">
-                    <i data-lucide="settings" class="w-4 h-4"></i>
-                </button>
-
-                <button id="pwaInstallBtn" onclick="triggerPWAInstall()" class="hidden bg-amber-400 text-slate-900 text-xs font-bold px-2 py-1.5 rounded-lg flex items-center space-x-1 shadow animate-pulse">
-                    <i data-lucide="download" class="w-3.5 h-3.5"></i>
-                </button>
+            <div>
+              <p class="text-[11px] text-slate-400 font-medium">Acumulado</p>
+              <p id="gen-total-cost" class="text-xl font-extrabold text-teal-700 tracking-tight mt-0.5">$0.00</p>
             </div>
+            <div class="grid grid-cols-2 gap-1 pt-2.5 mt-2.5 border-t border-slate-100 text-xs">
+              <div>
+                <span class="block text-[10px] text-slate-400">Por día</span>
+                <span id="gen-cost-day" class="font-bold text-slate-700">$0.00</span>
+              </div>
+              <div class="text-right">
+                <span class="block text-[10px] text-slate-400">Por km</span>
+                <span id="gen-cost-km" class="font-bold text-slate-700">$0.00</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Tarjeta Distancia -->
+          <div class="bg-white rounded-2xl p-3.5 card-shadow border border-slate-100 flex flex-col justify-between">
+            <div class="flex items-center gap-2.5 mb-3">
+              <div class="w-9 h-9 rounded-xl bg-slate-600 text-white flex items-center justify-center shadow-sm">
+                <i class="fa-solid fa-route text-sm"></i>
+              </div>
+              <span class="font-bold text-sm text-slate-700">Distancia</span>
+            </div>
+            <div>
+              <p class="text-[11px] text-slate-400 font-medium">Recorrido</p>
+              <p class="text-xl font-extrabold text-slate-700 tracking-tight mt-0.5">
+                <span id="gen-total-dist">0</span> <span class="text-xs font-semibold text-slate-400">km</span>
+              </p>
+            </div>
+            <div class="pt-2.5 mt-2.5 border-t border-slate-100 text-xs">
+              <span class="block text-[10px] text-slate-400">Promedio diario</span>
+              <span id="gen-dist-day" class="font-bold text-slate-700">0 km</span>
+            </div>
+          </div>
+
+          <!-- Tarjeta Combustible (Resumen en General) -->
+          <div onclick="switchReportSubTab('refueling')" class="bg-white rounded-2xl p-3.5 card-shadow border border-slate-100 flex flex-col justify-between cursor-pointer active:scale-[0.99] transition">
+            <div class="flex items-center gap-2.5 mb-3">
+              <div class="w-9 h-9 rounded-xl bg-amber-500 text-white flex items-center justify-center shadow-sm">
+                <i class="fa-solid fa-gas-pump text-sm"></i>
+              </div>
+              <span class="font-bold text-sm text-amber-600">Gasolina</span>
+            </div>
+            <div>
+              <p class="text-[11px] text-slate-400 font-medium">Total</p>
+              <p id="gen-fuel-cost" class="text-xl font-extrabold text-amber-600 tracking-tight mt-0.5">$0.00</p>
+            </div>
+            <div class="grid grid-cols-2 gap-1 pt-2.5 mt-2.5 border-t border-slate-100 text-xs">
+              <div>
+                <span class="block text-[10px] text-slate-400">Por día</span>
+                <span id="gen-fuel-day" class="font-bold text-slate-700">$0.00</span>
+              </div>
+              <div class="text-right">
+                <span class="block text-[10px] text-slate-400">Por km</span>
+                <span id="gen-fuel-km" class="font-bold text-slate-700">$0.00</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Tarjeta Servicios (Resumen en General) -->
+          <div onclick="switchReportSubTab('service')" class="bg-white rounded-2xl p-3.5 card-shadow border border-slate-100 flex flex-col justify-between cursor-pointer active:scale-[0.99] transition">
+            <div class="flex items-center gap-2.5 mb-3">
+              <div class="w-9 h-9 rounded-xl bg-stone-600 text-white flex items-center justify-center shadow-sm">
+                <i class="fa-solid fa-wrench text-sm"></i>
+              </div>
+              <span class="font-bold text-sm text-stone-700">Servicios</span>
+            </div>
+            <div>
+              <p class="text-[11px] text-slate-400 font-medium">Total</p>
+              <p id="gen-srv-cost" class="text-xl font-extrabold text-stone-700 tracking-tight mt-0.5">$0.00</p>
+            </div>
+            <div class="grid grid-cols-2 gap-1 pt-2.5 mt-2.5 border-t border-slate-100 text-xs">
+              <div>
+                <span class="block text-[10px] text-slate-400">Por día</span>
+                <span id="gen-srv-day" class="font-bold text-slate-700">$0.00</span>
+              </div>
+              <div class="text-right">
+                <span class="block text-[10px] text-slate-400">Por km</span>
+                <span id="gen-srv-km" class="font-bold text-slate-700">$0.00</span>
+              </div>
+            </div>
+          </div>
         </div>
 
-        <!-- Barra de Selección de Vehículo Activo -->
-        <div class="bg-blue-600 px-4 py-2 text-white">
-            <div class="max-w-md mx-auto flex items-center justify-between">
-                <span class="text-xs text-blue-100 font-medium flex items-center gap-1">
-                    <i data-lucide="car" class="w-3.5 h-3.5"></i> Vehículo:
-                </span>
-                <select id="activeVehicleSelect" onchange="switchVehicle(this.value)" class="bg-blue-700 text-amber-300 font-bold text-sm px-2.5 py-1 rounded-md border border-blue-500 outline-none max-w-[230px] truncate">
-                </select>
-            </div>
+        <!-- Gráfico General Mensual -->
+        <div class="bg-white rounded-2xl p-4 card-shadow border border-slate-100">
+          <div class="flex items-center justify-between mb-2">
+            <h3 class="text-xs font-bold uppercase tracking-wider text-slate-500">Gasto Mensual (Combustible vs Servicios)</h3>
+          </div>
+          <div class="h-48">
+            <canvas id="chartGeneral"></canvas>
+          </div>
         </div>
-    </header>
+      </div>
 
-    <!-- CONTENEDOR PRINCIPAL -->
-    <main class="max-w-md mx-auto px-4 pt-4">
-
-        <!-- PESTAÑA 1: REGISTRO DE GASTOS -->
-        <section id="view-register" class="space-y-4">
-            <div class="bg-white rounded-2xl p-5 shadow-sm border border-slate-200">
-                <h2 class="text-lg font-bold text-slate-800 mb-1 flex items-center gap-2">
-                    <i data-lucide="plus-circle" class="w-5 h-5 text-blue-600"></i> Nuevo Registro
-                </h2>
-                <p class="text-xs text-slate-500 mb-4">Selecciona la categoría e ingresa los datos de la factura.</p>
-
-                <form id="expenseForm" onsubmit="saveRecord(event)" class="space-y-4">
-                    
-                    <div>
-                        <label class="block text-xs font-bold text-slate-600 uppercase tracking-wider mb-2">Categoría</label>
-                        <div class="grid grid-cols-2 gap-3">
-                            <button type="button" onclick="setCategory('gasolina')" id="catBtn-gasolina" class="py-3 px-4 rounded-xl font-bold text-sm flex items-center justify-center space-x-2 border-2 transition-all border-blue-600 bg-blue-50 text-blue-700">
-                                <i data-lucide="fuel" class="w-4 h-4"></i>
-                                <span>Gasolina</span>
-                            </button>
-                            <button type="button" onclick="setCategory('taller')" id="catBtn-taller" class="py-3 px-4 rounded-xl font-bold text-sm flex items-center justify-center space-x-2 border-2 transition-all border-slate-200 bg-white text-slate-600">
-                                <i data-lucide="wrench" class="w-4 h-4"></i>
-                                <span>Taller / Manten.</span>
-                            </button>
-                        </div>
-                    </div>
-
-                    <!-- Fecha del Registro -->
-                    <div>
-                        <label class="block text-xs font-semibold text-slate-600 mb-1">Fecha de la Factura *</label>
-                        <div class="relative">
-                            <input type="date" id="dateInput" required class="w-full bg-white border border-slate-300 rounded-lg pl-9 pr-3 py-2 text-sm outline-none focus:ring-2 focus:ring-blue-500">
-                            <i data-lucide="calendar" class="w-4 h-4 text-slate-400 absolute left-3 top-2.5"></i>
-                        </div>
-                    </div>
-
-                    <div id="gasolineFields" class="space-y-3 bg-amber-50/60 p-3.5 rounded-xl border border-amber-200">
-                        <div class="grid grid-cols-2 gap-3">
-                            <div>
-                                <label class="block text-xs font-semibold text-slate-600 mb-1">Volumen Cargado</label>
-                                <div class="flex">
-                                    <input type="number" step="0.001" id="fuelAmount" placeholder="Ej. 10.5" class="w-full bg-white border border-slate-300 rounded-l-lg px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-blue-500">
-                                    <select id="fuelUnit" class="bg-slate-100 border border-l-0 border-slate-300 rounded-r-lg px-2 text-xs font-bold text-slate-700">
-                                        <option value="Gal">Gal</option>
-                                        <option value="Lts">Lts</option>
-                                    </select>
-                                </div>
-                            </div>
-                            <div>
-                                <label class="block text-xs font-semibold text-slate-600 mb-1">Tipo Combustible</label>
-                                <select id="fuelType" class="w-full bg-white border border-slate-300 rounded-lg px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-blue-500">
-                                    <option value="Regular">Regular</option>
-                                    <option value="Super">Súper</option>
-                                    <option value="Diesel">Diésel</option>
-                                </select>
-                            </div>
-                        </div>
-
-                        <!-- Tanque Lleno Completo Toggle -->
-                        <div class="flex items-center justify-between pt-1 border-t border-amber-200/70">
-                            <div>
-                                <span class="text-xs font-bold text-slate-700 block">¿Tanque lleno completo?</span>
-                                <span class="text-[10px] text-slate-500">Necesario para calcular el rendimiento exacto</span>
-                            </div>
-                            <label class="relative inline-flex items-center cursor-pointer">
-                                <input type="checkbox" id="fullTankInput" checked class="sr-only peer">
-                                <div class="w-11 h-6 bg-slate-300 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-emerald-600"></div>
-                            </label>
-                        </div>
-                    </div>
-
-                    <div>
-                        <label class="block text-xs font-semibold text-slate-600 mb-1">Odómetro Actual (Km) *</label>
-                        <div class="relative">
-                            <input type="number" id="odometerInput" required placeholder="Ej. 45200" class="w-full bg-white border border-slate-300 rounded-lg pl-9 pr-3 py-2 text-sm outline-none focus:ring-2 focus:ring-blue-500">
-                            <i data-lucide="gauge" class="w-4 h-4 text-slate-400 absolute left-3 top-2.5"></i>
-                        </div>
-                    </div>
-
-                    <div>
-                        <label class="block text-xs font-semibold text-slate-600 mb-1">Monto de la Factura *</label>
-                        <div class="flex gap-2">
-                            <div class="relative flex-1">
-                                <input type="number" step="0.01" id="costInput" required placeholder="0.00" class="w-full bg-white border border-slate-300 rounded-lg pl-8 pr-3 py-2 text-sm outline-none focus:ring-2 focus:ring-blue-500">
-                                <span id="currencyPrefix" class="absolute left-3 top-2 text-sm font-bold text-slate-400">$</span>
-                            </div>
-                            <select id="txCurrency" onchange="handleTxCurrencyChange()" class="bg-slate-100 border border-slate-300 rounded-lg px-3 py-2 text-xs font-bold text-slate-700">
-                                <option value="USD">USD ($)</option>
-                                <option value="CRC">CRC (₡)</option>
-                                <option value="NIO">NIO (C$)</option>
-                                <option value="HNL">HNL (L)</option>
-                                <option value="GTQ">GTQ (Q)</option>
-                                <option value="MXN">MXN ($)</option>
-                                <option value="DOP">DOP (RD$)</option>
-                                <option value="PAB">PAB (B/.)</option>
-                            </select>
-                        </div>
-                    </div>
-
-                    <div id="exchangeRateContainer" class="hidden bg-blue-50 p-3 rounded-xl border border-blue-200 text-xs">
-                        <div class="flex items-center justify-between mb-1">
-                            <span class="font-bold text-blue-800">Moneda diferente a la base</span>
-                            <span id="rateLabel" class="text-blue-600">1 USD = X Local</span>
-                        </div>
-                        <div class="flex items-center gap-2">
-                            <span class="text-slate-500">Tasa de cambio:</span>
-                            <input type="number" step="0.0001" id="exchangeRateInput" class="w-28 bg-white border border-slate-300 rounded px-2 py-1 text-xs text-right font-bold" placeholder="1.0">
-                        </div>
-                    </div>
-
-                    <div class="grid grid-cols-2 gap-3">
-                        <div>
-                            <label id="providerLabel" class="block text-xs font-semibold text-slate-600 mb-1">Gasolinera / Estación</label>
-                            <input type="text" id="stationInput" placeholder="Ej. Uno, Puma, Texaco" class="w-full bg-white border border-slate-300 rounded-lg px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-blue-500">
-                        </div>
-                        <div>
-                            <label class="block text-xs font-semibold text-slate-600 mb-1">Nº Factura / Comprob.</label>
-                            <input type="text" id="invoiceNumber" placeholder="Ej. F-001239" class="w-full bg-white border border-slate-300 rounded-lg px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-blue-500">
-                        </div>
-                    </div>
-
-                    <div>
-                        <label class="block text-xs font-semibold text-slate-600 mb-1">Notas / Observaciones</label>
-                        <textarea id="notesInput" rows="2" placeholder="Detalles de la compra o mantenimiento..." class="w-full bg-white border border-slate-300 rounded-lg px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-blue-500"></textarea>
-                    </div>
-
-                    <div>
-                        <label class="block text-xs font-semibold text-slate-600 mb-1">Foto de Comprobante</label>
-                        <div onclick="document.getElementById('receiptPhoto').click()" class="border-2 border-dashed border-slate-300 rounded-xl p-3 text-center bg-slate-50 hover:bg-slate-100 cursor-pointer transition-colors">
-                            <input type="file" id="receiptPhoto" accept="image/*" class="hidden" onchange="previewImage(event)">
-                            <div id="photoPreviewArea" class="flex flex-col items-center justify-center space-y-1">
-                                <i data-lucide="camera" class="w-6 h-6 text-slate-400"></i>
-                                <span class="text-xs text-slate-500 font-medium">Tocar para tomar foto o adjuntar</span>
-                            </div>
-                        </div>
-                    </div>
-
-                    <button type="submit" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-4 rounded-xl shadow-lg shadow-blue-500/30 flex items-center justify-center space-x-2 transition-transform active:scale-95">
-                        <i data-lucide="check-circle" class="w-5 h-5"></i>
-                        <span>Guardar Registro</span>
-                    </button>
-                </form>
+      <!-- SUB-VISTA 2: COMBUSTIBLE (REFUELING) -->
+      <div id="report-pane-refueling" class="hidden space-y-3.5">
+        <div class="grid grid-cols-2 gap-3">
+          <!-- Costo Combustible -->
+          <div class="bg-white rounded-2xl p-3.5 card-shadow border border-slate-100 flex flex-col justify-between">
+            <div class="flex items-center gap-2.5 mb-3">
+              <div class="w-9 h-9 rounded-xl bg-amber-500 text-white flex items-center justify-center shadow-sm">
+                <i class="fa-solid fa-dollar-sign text-sm"></i>
+              </div>
+              <span class="font-bold text-sm text-amber-600">Costo</span>
             </div>
-        </section>
-
-        <!-- PESTAÑA 2: HISTORIAL ESTILO LÍNEA DE TIEMPO / CARRETERA -->
-        <section id="view-history" class="hidden space-y-3">
-            <div class="flex items-center justify-between mb-1">
-                <div>
-                    <h2 class="text-lg font-bold text-slate-800 flex items-center gap-2">
-                        <i data-lucide="route" class="w-5 h-5 text-blue-600"></i> Bitácora de Ruta
-                    </h2>
-                    <p class="text-[11px] text-slate-500">Toca un registro para desplegar rendimiento y acciones.</p>
-                </div>
-                <div class="flex items-center gap-1.5">
-                    <button onclick="toggleSearchFilter()" class="p-2 bg-white border border-slate-200 text-slate-600 rounded-lg shadow-xs hover:bg-slate-50" title="Buscar">
-                        <i data-lucide="search" class="w-4 h-4"></i>
-                    </button>
-                    <button onclick="exportToCSV()" class="text-xs bg-emerald-600 text-white font-bold px-3 py-2 rounded-lg flex items-center gap-1 shadow">
-                        <i data-lucide="download" class="w-3.5 h-3.5"></i> CSV
-                    </button>
-                </div>
+            <div>
+              <p class="text-[11px] text-slate-400 font-medium">Total</p>
+              <p id="ref-total-cost" class="text-xl font-extrabold text-amber-600 tracking-tight mt-0.5">$0.00</p>
             </div>
-
-            <!-- Barra de búsqueda rápida en historial -->
-            <div id="historySearchBox" class="hidden">
-                <input type="text" id="historySearchInput" oninput="renderHistory()" placeholder="Buscar por gasolinera, taller, factura o nota..." class="w-full bg-white border border-slate-300 rounded-xl px-3.5 py-2 text-xs outline-none focus:ring-2 focus:ring-blue-500 shadow-xs">
+            <div class="grid grid-cols-2 gap-1 pt-2.5 mt-2.5 border-t border-slate-100 text-xs">
+              <div>
+                <span class="block text-[10px] text-slate-400">Por día</span>
+                <span id="ref-cost-day" class="font-bold text-slate-700">$0.00</span>
+              </div>
+              <div class="text-right">
+                <span class="block text-[10px] text-slate-400">Por km</span>
+                <span id="ref-cost-km" class="font-bold text-slate-700">$0.00</span>
+              </div>
             </div>
+          </div>
 
-            <!-- Contenedor de Línea de Tiempo -->
-            <div id="historyTimelineContainer" class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
-                <div id="historyList" class="relative"></div>
+          <!-- Volumen -->
+          <div class="bg-white rounded-2xl p-3.5 card-shadow border border-slate-100 flex flex-col justify-between">
+            <div class="flex items-center gap-2.5 mb-3">
+              <div class="w-9 h-9 rounded-xl bg-amber-500 text-white flex items-center justify-center shadow-sm">
+                <i class="fa-solid fa-fill-drip text-sm"></i>
+              </div>
+              <span class="font-bold text-sm text-amber-600">Volumen</span>
             </div>
-        </section>
-
-        <!-- PESTAÑA 3: RESUMEN Y MÉTRICAS CLAVE -->
-        <section id="view-summary" class="hidden space-y-4">
-            <h2 class="text-lg font-bold text-slate-800 flex items-center gap-2">
-                <i data-lucide="bar-chart-3" class="w-5 h-5 text-blue-600"></i> Métricas de Eficiencia
-            </h2>
-
-            <div class="grid grid-cols-2 gap-3">
-                <div class="bg-white p-3.5 rounded-xl border border-slate-200 shadow-sm">
-                    <div class="flex items-center space-x-2 text-slate-500 mb-1">
-                        <i data-lucide="gauge" class="w-4 h-4 text-emerald-500"></i>
-                        <span class="text-xs font-semibold">Rendimiento Prom.</span>
-                    </div>
-                    <div id="metricKmPerUnit" class="text-lg font-black text-slate-800">0 Km/Gal</div>
-                    <span id="metricLiters100Sub" class="text-[10px] text-slate-400">0.00 L/100km</span>
-                </div>
-
-                <div class="bg-white p-3.5 rounded-xl border border-slate-200 shadow-sm">
-                    <div class="flex items-center space-x-2 text-slate-500 mb-1">
-                        <i data-lucide="coins" class="w-4 h-4 text-amber-500"></i>
-                        <span class="text-xs font-semibold">Costo por Km</span>
-                    </div>
-                    <div id="metricCostPerKm" class="text-lg font-black text-slate-800">$0.00 /Km</div>
-                    <span id="metricAvgPriceUnit" class="text-[10px] text-slate-400">Prom: $0.00/Gal</span>
-                </div>
-
-                <div class="bg-white p-3.5 rounded-xl border border-slate-200 shadow-sm">
-                    <div class="flex items-center space-x-2 text-slate-500 mb-1">
-                        <i data-lucide="navigation" class="w-4 h-4 text-indigo-500"></i>
-                        <span class="text-xs font-semibold">Distancia Llenados</span>
-                    </div>
-                    <div id="metricAvgDistance" class="text-lg font-black text-slate-800">0 Km</div>
-                    <span id="metricAvgDaysSub" class="text-[10px] text-slate-400">Cada 0 días</span>
-                </div>
-
-                <div class="bg-white p-3.5 rounded-xl border border-slate-200 shadow-sm">
-                    <div class="flex items-center space-x-2 text-slate-500 mb-1">
-                        <i data-lucide="dollar-sign" class="w-4 h-4 text-blue-500"></i>
-                        <span class="text-xs font-semibold">Gasto Total Flota</span>
-                    </div>
-                    <div id="metricTotalCost" class="text-lg font-black text-slate-800">$0.00</div>
-                    <span class="text-[10px] text-slate-400">Gasolina + Taller</span>
-                </div>
+            <div>
+              <p class="text-[11px] text-slate-400 font-medium">Total cargado</p>
+              <p class="text-xl font-extrabold text-amber-600 tracking-tight mt-0.5">
+                <span id="ref-total-vol">0.00</span> <span class="text-xs font-semibold">gal</span>
+              </p>
             </div>
-
-            <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm">
-                <h3 class="text-xs font-bold text-slate-600 uppercase mb-3">Distribución de Gastos</h3>
-                <div class="h-48 relative">
-                    <canvas id="expensesChart"></canvas>
-                </div>
+            <div class="grid grid-cols-2 gap-1 pt-2.5 mt-2.5 border-t border-slate-100 text-xs">
+              <div>
+                <span class="block text-[10px] text-slate-400">Por carga</span>
+                <span id="ref-vol-fill" class="font-bold text-slate-700">0.00 gal</span>
+              </div>
+              <div class="text-right">
+                <span class="block text-[10px] text-slate-400">Por día</span>
+                <span id="ref-vol-day" class="font-bold text-slate-700">0.00 gal</span>
+              </div>
             </div>
-        </section>
+          </div>
 
-        <!-- PESTAÑA 4: VEHÍCULOS -->
-        <section id="view-vehicles" class="hidden space-y-4">
+          <!-- Precio Promedio -->
+          <div class="bg-white rounded-2xl p-3.5 card-shadow border border-slate-100 flex flex-col justify-between">
+            <div class="flex items-center gap-2.5 mb-3">
+              <div class="w-9 h-9 rounded-xl bg-amber-500 text-white flex items-center justify-center shadow-sm">
+                <i class="fa-solid fa-tag text-sm"></i>
+              </div>
+              <span class="font-bold text-sm text-amber-600 truncate">Precio prom.</span>
+            </div>
+            <div>
+              <p class="text-[11px] text-slate-400 font-medium">Precio / gal</p>
+              <p id="ref-avg-price" class="text-xl font-extrabold text-amber-600 tracking-tight mt-0.5">$0.00</p>
+            </div>
+            <div class="grid grid-cols-2 gap-1 pt-2.5 mt-2.5 border-t border-slate-100 text-xs">
+              <div>
+                <span class="block text-[10px] text-emerald-600 font-semibold">Menor</span>
+                <span id="ref-min-price" class="font-bold text-slate-700">$0.00</span>
+              </div>
+              <div class="text-right">
+                <span class="block text-[10px] text-rose-600 font-semibold">Mayor</span>
+                <span id="ref-max-price" class="font-bold text-slate-700">$0.00</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Eficiencia de Combustible -->
+          <div class="bg-white rounded-2xl p-3.5 card-shadow border border-slate-100 flex flex-col justify-between">
+            <div class="flex items-center gap-2.5 mb-3">
+              <div class="w-9 h-9 rounded-xl bg-amber-500 text-white flex items-center justify-center shadow-sm">
+                <i class="fa-solid fa-gauge-high text-sm"></i>
+              </div>
+              <span class="font-bold text-sm text-amber-600 truncate">Eficiencia</span>
+            </div>
+            <div>
+              <p class="text-[11px] text-slate-400 font-medium">Promedio general</p>
+              <p class="text-xl font-extrabold text-amber-600 tracking-tight mt-0.5">
+                <span id="ref-avg-eff">0.00</span> <span class="text-[11px] font-semibold">L/100km</span>
+              </p>
+              <p id="ref-avg-kmgal" class="text-[11px] text-slate-400 font-medium mt-0.5">0.0 km/gal</p>
+            </div>
+            <div class="grid grid-cols-2 gap-1 pt-2 mt-2 border-t border-slate-100 text-[11px]">
+              <div>
+                <span class="block text-[10px] text-emerald-600 font-semibold">Mejor</span>
+                <span id="ref-best-eff" class="font-bold text-slate-700">0.00</span>
+              </div>
+              <div class="text-right">
+                <span class="block text-[10px] text-rose-600 font-semibold">Mayor cons.</span>
+                <span id="ref-worst-eff" class="font-bold text-slate-700">0.00</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Gráfico Evolución Precio Galón y Consumo -->
+        <div class="bg-white rounded-2xl p-4 card-shadow border border-slate-100">
+          <h3 class="text-xs font-bold uppercase tracking-wider text-slate-500 mb-2">Evolución Precio / Galón ($)</h3>
+          <div class="h-44">
+            <canvas id="chartFuelPrice"></canvas>
+          </div>
+        </div>
+      </div>
+
+      <!-- SUB-VISTA 3: SERVICIOS / MANTENIMIENTO -->
+      <div id="report-pane-service" class="hidden space-y-3.5">
+        <!-- Tarjeta Principal Costo Servicios -->
+        <div class="bg-white rounded-2xl p-4 card-shadow border border-slate-100">
+          <div class="flex items-center gap-3 mb-3">
+            <div class="w-10 h-10 rounded-xl bg-stone-600 text-white flex items-center justify-center shadow-sm">
+              <i class="fa-solid fa-screwdriver-wrench text-base"></i>
+            </div>
+            <div>
+              <span class="font-bold text-base text-stone-700 block">Costo de Mantenimiento</span>
+              <span id="srv-count-label" class="text-xs text-slate-400">0 servicios registrados</span>
+            </div>
+          </div>
+          <div class="my-2">
+            <p class="text-xs text-slate-400 font-medium">Total invertido</p>
+            <p id="srv-total-cost" class="text-3xl font-extrabold text-stone-700 tracking-tight mt-0.5">$0.00</p>
+          </div>
+          <div class="grid grid-cols-3 gap-2 pt-3 mt-3 border-t border-slate-100 text-xs">
+            <div>
+              <span class="block text-[10px] text-slate-400">Por día</span>
+              <span id="srv-cost-day" class="font-bold text-slate-700">$0.00</span>
+            </div>
+            <div>
+              <span class="block text-[10px] text-slate-400">Por km</span>
+              <span id="srv-cost-km" class="font-bold text-slate-700">$0.00</span>
+            </div>
+            <div class="text-right">
+              <span class="block text-[10px] text-slate-400">Prom. / visita</span>
+              <span id="srv-avg-visit" class="font-bold text-slate-700">$0.00</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Desglose por Tipo de Servicio -->
+        <div class="bg-white rounded-2xl p-4 card-shadow border border-slate-100">
+          <h3 class="text-xs font-bold uppercase tracking-wider text-slate-500 mb-3">Desglose por Tipo de Mantenimiento</h3>
+          <div id="srv-breakdown-list" class="space-y-2.5 text-sm">
+            <p class="text-xs text-slate-400 text-center py-4">No hay registros de mantenimiento en este período.</p>
+          </div>
+        </div>
+
+        <!-- Últimos Servicios Realizados -->
+        <div class="bg-white rounded-2xl p-4 card-shadow border border-slate-100">
+          <h3 class="text-xs font-bold uppercase tracking-wider text-slate-500 mb-3">Historial Reciente de Taller</h3>
+          <div id="srv-recent-list" class="divide-y divide-slate-100">
+            <p class="text-xs text-slate-400 text-center py-4">Sin servicios registrados aún.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ==================== VISTA: HISTORIAL ==================== -->
+    <section id="view-history" class="hidden space-y-3 animate-fade">
+      <div class="flex items-center justify-between gap-2">
+        <div class="flex gap-1.5 overflow-x-auto no-scrollbar py-1">
+          <button onclick="setHistoryFilter('all')" id="hfilter-all" class="px-3 py-1.5 rounded-full text-xs font-bold bg-teal-700 text-white">Todos</button>
+          <button onclick="setHistoryFilter('gasolina')" id="hfilter-gasolina" class="px-3 py-1.5 rounded-full text-xs font-semibold bg-white text-slate-600 border border-slate-200">Gasolina</button>
+          <button onclick="setHistoryFilter('mantenimiento')" id="hfilter-mantenimiento" class="px-3 py-1.5 rounded-full text-xs font-semibold bg-white text-slate-600 border border-slate-200">Servicios</button>
+        </div>
+        <button onclick="exportCSV()" class="text-xs font-semibold text-teal-700 bg-teal-50 px-3 py-1.5 rounded-xl shrink-0">
+          <i class="fa-solid fa-file-export mr-1"></i>CSV
+        </button>
+      </div>
+
+      <div id="historyListContainer" class="space-y-2.5"></div>
+    </section>
+
+    <!-- ==================== VISTA: VEHÍCULOS ==================== -->
+    <section id="view-vehicles" class="hidden space-y-3.5 animate-fade">
+      <div class="flex items-center justify-between">
+        <h2 class="text-base font-bold text-slate-800">Mis Vehículos</h2>
+        <button onclick="openVehicleModal()" class="bg-teal-700 text-white text-xs font-bold px-3.5 py-2 rounded-xl shadow-sm active:scale-95 transition">
+          <i class="fa-solid fa-plus mr-1"></i> Agregar Vehículo
+        </button>
+      </div>
+      <div id="vehiclesListContainer" class="space-y-3"></div>
+    </section>
+
+  </main>
+
+  <!-- NAVEGACIÓN INFERIOR + BOTÓN FLOTANTE (+) -->
+  <nav class="fixed bottom-0 inset-x-0 bg-white border-t border-slate-200 z-30 pb-safe">
+    <div class="max-w-lg mx-auto grid grid-cols-4 items-center h-16 relative">
+      <button onclick="switchMainView('history')" id="nav-history" class="flex flex-col items-center justify-center gap-1 text-slate-400">
+        <i class="fa-solid fa-list-ul text-lg"></i>
+        <span class="text-[11px] font-semibold">Historial</span>
+      </button>
+
+      <button onclick="switchMainView('reports')" id="nav-reports" class="flex flex-col items-center justify-center gap-1 nav-active">
+        <i class="fa-solid fa-chart-area text-lg"></i>
+        <span class="text-[11px] font-bold">Reportes</span>
+      </button>
+
+      <!-- Botón Central (+) -->
+      <div class="flex justify-center">
+        <button onclick="openRecordModal()"
+          class="w-14 h-14 -mt-6 rounded-full bg-teal-600 hover:bg-teal-700 text-white shadow-lg flex items-center justify-center text-2xl active:scale-95 transition border-4 border-slate-100">
+          <i class="fa-solid fa-plus"></i>
+        </button>
+      </div>
+
+      <button onclick="switchMainView('vehicles')" id="nav-vehicles" class="flex flex-col items-center justify-center gap-1 text-slate-400">
+        <i class="fa-solid fa-car text-lg"></i>
+        <span class="text-[11px] font-semibold">Vehículos</span>
+      </button>
+    </div>
+  </nav>
+
+  <!-- ==================== MODAL: NUEVO / EDITAR REGISTRO ==================== -->
+  <div id="recordModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-xs z-50 hidden flex items-end sm:items-center justify-center">
+    <div class="bg-white w-full max-w-lg rounded-t-3xl sm:rounded-3xl p-5 max-h-[92vh] overflow-y-auto space-y-4 animate-fade">
+      <div class="flex items-center justify-between border-b border-slate-100 pb-3">
+        <h3 id="recordModalTitle" class="text-base font-extrabold text-slate-800">Nuevo Registro</h3>
+        <button onclick="closeRecordModal()" class="w-8 h-8 rounded-full bg-slate-100 text-slate-500 flex items-center justify-center">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+      </div>
+
+      <form id="recordForm" onsubmit="saveRecord(event)" class="space-y-3.5">
+        <input type="hidden" id="recId" />
+
+        <!-- Selector Tipo: Gasolina vs Servicio -->
+        <div class="grid grid-cols-2 gap-2 bg-slate-100 p-1 rounded-2xl">
+          <button type="button" id="btnCatGas" onclick="setRecordCategory('gasolina')"
+            class="py-2 rounded-xl text-xs font-bold bg-amber-500 text-white shadow-xs transition">
+            <i class="fa-solid fa-gas-pump mr-1.5"></i>Combustible
+          </button>
+          <button type="button" id="btnCatSrv" onclick="setRecordCategory('mantenimiento')"
+            class="py-2 rounded-xl text-xs font-bold text-slate-600 transition">
+            <i class="fa-solid fa-wrench mr-1.5"></i>Servicio / Taller
+          </button>
+        </div>
+        <input type="hidden" id="recCategory" value="gasolina" />
+
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block text-xs font-semibold text-slate-600 mb-1">Vehículo</label>
+            <select id="recVehicle" required class="w-full text-sm border border-slate-200 rounded-xl px-3 py-2.5 bg-white"></select>
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-slate-600 mb-1">Fecha</label>
+            <input type="date" id="recDate" required class="w-full text-sm border border-slate-200 rounded-xl px-3 py-2.5" />
+          </div>
+        </div>
+
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block text-xs font-semibold text-slate-600 mb-1">Odómetro (km)</label>
+            <input type="number" step="1" id="recOdometer" required placeholder="Ej: 17850"
+              class="w-full text-sm border border-slate-200 rounded-xl px-3 py-2.5 font-semibold" />
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-slate-600 mb-1">Monto Total ($)</label>
+            <input type="number" step="0.01" id="recAmount" required placeholder="0.00" oninput="calcFuelHelper()"
+              class="w-full text-sm border border-slate-200 rounded-xl px-3 py-2.5 font-bold text-teal-700" />
+          </div>
+        </div>
+
+        <!-- Campos Específicos Gasolina -->
+        <div id="fuelFieldsGroup" class="space-y-3 bg-amber-50/70 p-3 rounded-2xl border border-amber-100">
+          <div class="grid grid-cols-2 gap-3">
+            <div>
+              <label class="block text-xs font-semibold text-amber-900 mb-1">Volumen (Galones)</label>
+              <input type="number" step="0.001" id="recVolume" placeholder="Ej: 10.50" oninput="calcFuelHelper()"
+                class="w-full text-sm border border-amber-200 rounded-xl px-3 py-2 bg-white" />
+            </div>
+            <div>
+              <label class="block text-xs font-semibold text-amber-900 mb-1">Tipo Combustible</label>
+              <select id="recFuelType" class="w-full text-sm border border-amber-200 rounded-xl px-3 py-2 bg-white">
+                <option value="Regular">Regular</option>
+                <option value="Super">Especial / Súper</option>
+                <option value="Diesel">Diésel</option>
+              </select>
+            </div>
+          </div>
+          <div class="flex items-center justify-between text-xs text-amber-800">
+            <span id="fuelPricePreview">Precio calculado: <strong>$0.00 / gal</strong></span>
+            <label class="inline-flex items-center gap-1.5 cursor-pointer font-semibold">
+              <input type="checkbox" id="recFullTank" checked class="rounded text-amber-600" />
+              Tanque lleno
+            </label>
+          </div>
+        </div>
+
+        <!-- Campos Específicos Servicio / Mantenimiento -->
+        <div id="serviceFieldsGroup" class="hidden space-y-3 bg-stone-50 p-3 rounded-2xl border border-stone-200">
+          <div>
+            <label class="block text-xs font-semibold text-stone-700 mb-1">Tipo de Servicio / Mantenimiento</label>
+            <select id="recServiceType" class="w-full text-sm border border-stone-200 rounded-xl px-3 py-2 bg-white">
+              <option value="Cambio de Aceite y Filtro">Cambio de Aceite y Filtro</option>
+              <option value="Mantenimiento Preventivo">Mantenimiento Preventivo (Km)</option>
+              <option value="Frenos / Pastillas">Frenos / Pastillas</option>
+              <option value="Llantas / Alineación">Llantas / Alineación y Balanceo</option>
+              <option value="Batería / Eléctrico">Batería / Sistema Eléctrico</option>
+              <option value="Filtros (Aire / Cabina)">Filtros (Aire / Cabina)</option>
+              <option value="Reparación General">Reparación General / Taller</option>
+              <option value="Otro Servicio">Otro Servicio</option>
+            </select>
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-stone-700 mb-1">Taller / Proveedor (Opcional)</label>
+            <input type="text" id="recProvider" placeholder="Ej: Agencia Hyundai, Taller..."
+              class="w-full text-sm border border-stone-200 rounded-xl px-3 py-2 bg-white" />
+          </div>
+        </div>
+
+        <div>
+          <label class="block text-xs font-semibold text-slate-600 mb-1">Notas / Observaciones</label>
+          <input type="text" id="recNotes" placeholder="Detalles adicionales..."
+            class="w-full text-sm border border-slate-200 rounded-xl px-3 py-2.5" />
+        </div>
+
+        <button type="submit"
+          class="w-full bg-teal-700 hover:bg-teal-800 text-white font-bold py-3 rounded-2xl shadow-md active:scale-[0.99] transition">
+          Guardar Registro
+        </button>
+      </form>
+    </div>
+  </div>
+
+  <!-- ==================== MODAL: VEHÍCULO ==================== -->
+  <div id="vehicleModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-xs z-50 hidden flex items-center justify-center p-4">
+    <div class="bg-white w-full max-w-md rounded-3xl p-5 space-y-4 animate-fade">
+      <div class="flex items-center justify-between border-b border-slate-100 pb-3">
+        <h3 class="text-base font-extrabold text-slate-800">Datos del Vehículo</h3>
+        <button onclick="closeVehicleModal()" class="w-8 h-8 rounded-full bg-slate-100 text-slate-500 flex items-center justify-center">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+      </div>
+      <form onsubmit="saveVehicle(event)" class="space-y-3">
+        <div>
+          <label class="block text-xs font-semibold text-slate-600 mb-1">Placa / Identificador</label>
+          <input type="text" id="vehPlate" required placeholder="Ej: CRETA-GRAND-2024 o P123-456"
+            class="w-full text-sm border border-slate-200 rounded-xl px-3 py-2.5 uppercase font-bold" />
+        </div>
+        <div>
+          <label class="block text-xs font-semibold text-slate-600 mb-1">Marca y Modelo</label>
+          <input type="text" id="vehName" required placeholder="Ej: Hyundai Creta Grand 2024"
+            class="w-full text-sm border border-slate-200 rounded-xl px-3 py-2.5" />
+        </div>
+        <div>
+          <label class="block text-xs font-semibold text-slate-600 mb-1">Odómetro Actual (km)</label>
+          <input type="number" id="vehOdo" required placeholder="0"
+            class="w-full text-sm border border-slate-200 rounded-xl px-3 py-2.5" />
+        </div>
+        <button type="submit" class="w-full bg-teal-700 text-white font-bold py-3 rounded-2xl shadow-sm">
+          Guardar Vehículo
+        </button>
+      </form>
+    </div>
+  </div>
+
+  <!-- ==================== MODAL: AJUSTES / IMPORTAR / BACKUP ==================== -->
+  <div id="settingsModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-xs z-50 hidden flex items-end sm:items-center justify-center">
+    <div class="bg-white w-full max-w-lg rounded-t-3xl sm:rounded-3xl p-5 max-h-[90vh] overflow-y-auto space-y-4 animate-fade">
+      <div class="flex items-center justify-between border-b border-slate-100 pb-3">
+        <h3 class="text-base font-extrabold text-slate-800"><i class="fa-solid fa-gear text-teal-700 mr-2"></i>Ajustes y Datos</h3>
+        <button onclick="closeSettingsModal()" class="w-8 h-8 rounded-full bg-slate-100 text-slate-500 flex items-center justify-center">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+      </div>
+
+      <!-- Importar CSV -->
+      <div class="bg-teal-50/70 border border-teal-100 rounded-2xl p-4 space-y-2.5">
+        <h4 class="text-sm font-bold text-teal-900"><i class="fa-solid fa-file-csv mr-1.5"></i>Importar Historial (CSV)</h4>
+        <p class="text-xs text-teal-800">Sube tu archivo CSV (detecta automáticamente las columnas Placa, Vehículo, Fecha, Odómetro, Volumen y Monto).</p>
+        <div class="space-y-2">
+          <label class="block text-[11px] font-semibold text-teal-900">Asignar a vehículo (opcional, si el CSV no trae Placa):</label>
+          <select id="importTargetVehicle" class="w-full text-xs border border-teal-200 rounded-xl px-3 py-2 bg-white">
+            <option value="AUTO">Detectar automáticamente desde el CSV</option>
+          </select>
+        </div>
+        <input type="file" id="csvFileInput" accept=".csv" onchange="handleCSVImport(event)"
+          class="block w-full text-xs text-slate-600 file:mr-3 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-bold file:bg-teal-700 file:text-white hover:file:bg-teal-800 cursor-pointer" />
+      </div>
+
+      <!-- Backup JSON -->
+      <div class="bg-slate-50 border border-slate-200 rounded-2xl p-4 space-y-2.5">
+        <h4 class="text-sm font-bold text-slate-800"><i class="fa-solid fa-database mr-1.5"></i>Copia de Seguridad (JSON)</h4>
+        <div class="grid grid-cols-2 gap-2.5">
+          <button onclick="downloadBackupJSON()" class="bg-slate-800 text-white text-xs font-bold py-2.5 px-3 rounded-xl">
+            <i class="fa-solid fa-download mr-1"></i>Hacer Backup
+          </button>
+          <label class="bg-white border border-slate-300 text-slate-700 text-xs font-bold py-2.5 px-3 rounded-xl text-center cursor-pointer">
+            <i class="fa-solid fa-upload mr-1"></i>Restaurar
+            <input type="file" accept=".json" onchange="restoreBackupJSON(event)" class="hidden" />
+          </label>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- TOAST NOTIFICACIÓN -->
+  <div id="toast" class="fixed top-16 left-1/2 -translate-x-1/2 bg-slate-900 text-white text-xs font-semibold px-4 py-2.5 rounded-full shadow-lg z-50 hidden"></div>
+
+  <script>
+    // ==================== ESTADO Y ALMACENAMIENTO ====================
+    const STORAGE_VEHICLES = 'aseal_vehicles_v1';
+    const STORAGE_RECORDS = 'aseal_records_v1';
+
+    let vehicles = JSON.parse(localStorage.getItem(STORAGE_VEHICLES)) || [
+      { plate: 'CRETA-GRAND-2024', name: 'Hyundai Creta Grand 2024', odometer: 17532 },
+      { plate: 'CRETA-2024', name: 'Hyundai Creta 2024', odometer: 8098 }
+    ];
+    let records = JSON.parse(localStorage.getItem(STORAGE_RECORDS)) || [];
+
+    let selectedVehicle = localStorage.getItem('aseal_selected_vehicle') || 'ALL';
+    let currentMainView = 'reports';
+    let currentReportSubTab = 'general';
+    let currentHistoryFilter = 'all';
+
+    let chartGeneralInstance = null;
+    let chartFuelPriceInstance = null;
+
+    function persistData() {
+      localStorage.setItem(STORAGE_VEHICLES, JSON.stringify(vehicles));
+      localStorage.setItem(STORAGE_RECORDS, JSON.stringify(records));
+    }
+
+    function showToast(msg) {
+      const t = document.getElementById('toast');
+      t.textContent = msg;
+      t.classList.remove('hidden');
+      setTimeout(() => t.classList.add('hidden'), 3000);
+    }
+
+    // ==================== INICIALIZACIÓN ====================
+    function initApp() {
+      populateVehicleSelectors();
+      renderAll();
+      if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.register('./sw.js').catch(() => {});
+      }
+    }
+
+    function populateVehicleSelectors() {
+      const globalSel = document.getElementById('globalVehicleSelect');
+      const recSel = document.getElementById('recVehicle');
+      const impSel = document.getElementById('importTargetVehicle');
+
+      globalSel.innerHTML = `<option value="ALL" class="text-slate-800">Toda la Flota (${vehicles.length})</option>`;
+      recSel.innerHTML = '';
+      impSel.innerHTML = `<option value="AUTO">Detectar automáticamente desde el CSV</option>`;
+
+      vehicles.forEach(v => {
+        globalSel.innerHTML += `<option value="${v.plate}" class="text-slate-800">${v.name} (${v.plate})</option>`;
+        recSel.innerHTML += `<option value="${v.plate}">${v.name} (${v.plate})</option>`;
+        impSel.innerHTML += `<option value="${v.plate}">${v.name} (${v.plate})</option>`;
+      });
+
+      if (selectedVehicle !== 'ALL' && !vehicles.some(v => v.plate === selectedVehicle)) {
+        selectedVehicle = 'ALL';
+      }
+      globalSel.value = selectedVehicle;
+      updateHeaderSub();
+    }
+
+    function updateHeaderSub() {
+      const sub = document.getElementById('headerVehicleSub');
+      if (selectedVehicle === 'ALL') {
+        const totalKm = vehicles.reduce((acc, v) => acc + (Number(v.odometer) || 0), 0);
+        sub.textContent = `${vehicles.length} vehículos · ${totalKm.toLocaleString()} km acumulados`;
+      } else {
+        const v = vehicles.find(x => x.plate === selectedVehicle);
+        sub.textContent = v ? `${v.plate} · ${Number(v.odometer).toLocaleString()} km` : '';
+      }
+    }
+
+    function onVehicleChange() {
+      selectedVehicle = document.getElementById('globalVehicleSelect').value;
+      localStorage.setItem('aseal_selected_vehicle', selectedVehicle);
+      updateHeaderSub();
+      renderAll();
+    }
+
+    // ==================== NAVEGACIÓN ====================
+    function switchMainView(view) {
+      currentMainView = view;
+      ['reports', 'history', 'vehicles'].forEach(v => {
+        document.getElementById(`view-${v}`).classList.toggle('hidden', v !== view);
+        const navBtn = document.getElementById(`nav-${v}`);
+        if (v === view) {
+          navBtn.classList.add('nav-active');
+          navBtn.classList.remove('text-slate-400');
+        } else {
+          navBtn.classList.remove('nav-active');
+          navBtn.classList.add('text-slate-400');
+        }
+      });
+      document.getElementById('reportSubTabs').classList.toggle('hidden', view !== 'reports');
+      renderAll();
+    }
+
+    function switchReportSubTab(tab) {
+      currentReportSubTab = tab;
+      ['general', 'refueling', 'service'].forEach(t => {
+        const btn = document.getElementById(`subtab-${t}`);
+        const pane = document.getElementById(`report-pane-${t}`);
+        if (t === tab) {
+          btn.classList.add('tab-active');
+          btn.classList.remove('font-semibold', 'hover:text-slate-700');
+          pane.classList.remove('hidden');
+        } else {
+          btn.classList.remove('tab-active');
+          btn.classList.add('font-semibold', 'hover:text-slate-700');
+          pane.classList.add('hidden');
+        }
+      });
+      renderReports();
+    }
+
+    function toggleDateFilterPanel() {
+      document.getElementById('dateFilterPanel').classList.toggle('hidden');
+    }
+
+    function setQuickDateFilter(mode) {
+      const startInput = document.getElementById('filterStartDate');
+      const endInput = document.getElementById('filterEndDate');
+      const now = new Date();
+      const todayStr = now.toISOString().split('T')[0];
+
+      if (mode === 'all') {
+        startInput.value = '';
+        endInput.value = '';
+      } else if (mode === '30d') {
+        const d = new Date();
+        d.setDate(d.getDate() - 30);
+        startInput.value = d.toISOString().split('T')[0];
+        endInput.value = todayStr;
+      } else if (mode === 'year') {
+        startInput.value = `${now.getFullYear()}-01-01`;
+        endInput.value = todayStr;
+      }
+      renderReports();
+    }
+
+    // ==================== CÁLCULO DE REPORTES (GENERAL / REFUELING / SERVICE) ====================
+    function getFilteredRecords() {
+      const start = document.getElementById('filterStartDate').value;
+      const end = document.getElementById('filterEndDate').value;
+
+      return records.filter(r => {
+        if (selectedVehicle !== 'ALL' && r.plate !== selectedVehicle) return false;
+        if (start && r.date < start) return false;
+        if (end && r.date > end) return false;
+        return true;
+      }).sort((a, b) => a.date.localeCompare(b.date) || (Number(a.odometer) - Number(b.odometer)));
+    }
+
+    function computeDistanceAndDays(list) {
+      if (!list.length) return { totalDist: 0, days: 1, minDate: '', maxDate: '' };
+
+      // Calcular distancia por vehículo para no mezclar odómetros
+      const byPlate = {};
+      list.forEach(r => {
+        if (!byPlate[r.plate]) byPlate[r.plate] = [];
+        byPlate[r.plate].push(Number(r.odometer) || 0);
+      });
+
+      let totalDist = 0;
+      Object.values(byPlate).forEach(odos => {
+        const valid = odos.filter(x => x > 0);
+        if (valid.length >= 2) {
+          totalDist += (Math.max(...valid) - Math.min(...valid));
+        }
+      });
+
+      const dates = list.map(r => r.date).filter(Boolean).sort();
+      const minDate = dates[0];
+      const maxDate = dates[dates.length - 1];
+      const d1 = new Date(minDate);
+      const d2 = new Date(maxDate);
+      const diffDays = Math.max(1, Math.round((d2 - d1) / (1000 * 60 * 60 * 24)) + 1);
+
+      return { totalDist, days: diffDays, minDate, maxDate };
+    }
+
+    function renderReports() {
+      const allFiltered = getFilteredRecords();
+      const fuelList = allFiltered.filter(r => r.category === 'gasolina');
+      const srvList = allFiltered.filter(r => r.category !== 'gasolina');
+
+      // Sub-tab activo determina el conteo superior estilo Drivvo
+      let activeList = allFiltered;
+      if (currentReportSubTab === 'refueling') activeList = fuelList;
+      if (currentReportSubTab === 'service') activeList = srvList;
+
+      const { totalDist, days, minDate, maxDate } = computeDistanceAndDays(allFiltered);
+      document.getElementById('reportEntriesCount').textContent = `${activeList.length} ${activeList.length === 1 ? 'registro' : 'registros'}`;
+      document.getElementById('reportDateRangeLabel').textContent = minDate ? `(${minDate} — ${maxDate})` : '(Sin datos)';
+
+      const totalFuelCost = fuelList.reduce((s, r) => s + (Number(r.amount) || 0), 0);
+      const totalSrvCost = srvList.reduce((s, r) => s + (Number(r.amount) || 0), 0);
+      const totalAllCost = totalFuelCost + totalSrvCost;
+
+      // 1. PESTAÑA GENERAL
+      document.getElementById('gen-total-cost').textContent = `$${totalAllCost.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+      document.getElementById('gen-cost-day').textContent = `$${(totalAllCost / days).toFixed(2)}`;
+      document.getElementById('gen-cost-km').textContent = totalDist > 0 ? `$${(totalAllCost / totalDist).toFixed(2)}` : '$0.00';
+
+      document.getElementById('gen-total-dist').textContent = totalDist.toLocaleString();
+      document.getElementById('gen-dist-day').textContent = `${Math.round(totalDist / days)} km`;
+
+      document.getElementById('gen-fuel-cost').textContent = `$${totalFuelCost.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+      document.getElementById('gen-fuel-day').textContent = `$${(totalFuelCost / days).toFixed(2)}`;
+      document.getElementById('gen-fuel-km').textContent = totalDist > 0 ? `$${(totalFuelCost / totalDist).toFixed(2)}` : '$0.00';
+
+      document.getElementById('gen-srv-cost').textContent = `$${totalSrvCost.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+      document.getElementById('gen-srv-day').textContent = `$${(totalSrvCost / days).toFixed(2)}`;
+      document.getElementById('gen-srv-km').textContent = totalDist > 0 ? `$${(totalSrvCost / totalDist).toFixed(2)}` : '$0.00';
+
+      renderGeneralChart(allFiltered);
+
+      // 2. PESTAÑA COMBUSTIBLE (REFUELING)
+      const fuelMeta = computeDistanceAndDays(fuelList);
+      const fuelDays = fuelMeta.days;
+      const fuelDist = fuelMeta.totalDist || totalDist;
+      const totalGal = fuelList.reduce((s, r) => s + (Number(r.volume) || 0), 0);
+
+      document.getElementById('ref-total-cost').textContent = `$${totalFuelCost.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+      document.getElementById('ref-cost-day').textContent = `$${(totalFuelCost / fuelDays).toFixed(2)}`;
+      document.getElementById('ref-cost-km').textContent = fuelDist > 0 ? `$${(totalFuelCost / fuelDist).toFixed(2)}` : '$0.00';
+
+      document.getElementById('ref-total-vol').textContent = totalGal.toFixed(2);
+      document.getElementById('ref-vol-fill').textContent = fuelList.length ? `${(totalGal / fuelList.length).toFixed(2)} gal` : '0.00 gal';
+      document.getElementById('ref-vol-day').textContent = `${(totalGal / fuelDays).toFixed(2)} gal`;
+
+      // Precios por galón
+      const prices = fuelList
+        .map(r => (Number(r.volume) > 0 ? Number(r.amount) / Number(r.volume) : 0))
+        .filter(p => p > 0);
+      const avgPrice = totalGal > 0 ? (totalFuelCost / totalGal) : 0;
+      const minPrice = prices.length ? Math.min(...prices) : 0;
+      const maxPrice = prices.length ? Math.max(...prices) : 0;
+
+      document.getElementById('ref-avg-price').textContent = `$${avgPrice.toFixed(2)}`;
+      document.getElementById('ref-min-price').textContent = `$${minPrice.toFixed(2)}`;
+      document.getElementById('ref-max-price').textContent = `$${maxPrice.toFixed(2)}`;
+
+      // Eficiencia (L/100km y km/gal)
+      const efficienciesL100 = [];
+      const byPlateFuel = {};
+      fuelList.forEach(r => {
+        if (!byPlateFuel[r.plate]) byPlateFuel[r.plate] = [];
+        byPlateFuel[r.plate].push(r);
+      });
+
+      Object.values(byPlateFuel).forEach(arr => {
+        arr.sort((a, b) => Number(a.odometer) - Number(b.odometer));
+        for (let i = 1; i < arr.length; i++) {
+          const dKm = Number(arr[i].odometer) - Number(arr[i - 1].odometer);
+          const gal = Number(arr[i].volume);
+          if (dKm > 20 && gal > 0) {
+            const liters = gal * 3.78541;
+            const l100 = (liters / dKm) * 100;
+            if (l100 > 2 && l100 < 35) efficienciesL100.push(l100);
+          }
+        }
+      });
+
+      const totalLiters = totalGal * 3.78541;
+      const genL100 = fuelDist > 0 ? (totalLiters / fuelDist) * 100 : 0;
+      const genKmGal = totalGal > 0 ? (fuelDist / totalGal) : 0;
+      const bestEff = efficienciesL100.length ? Math.min(...efficienciesL100) : genL100;
+      const worstEff = efficienciesL100.length ? Math.max(...efficienciesL100) : genL100;
+
+      document.getElementById('ref-avg-eff').textContent = genL100.toFixed(2);
+      document.getElementById('ref-avg-kmgal').textContent = `${genKmGal.toFixed(1)} km/gal`;
+      document.getElementById('ref-best-eff').textContent = `${bestEff.toFixed(2)} L/100`;
+      document.getElementById('ref-worst-eff').textContent = `${worstEff.toFixed(2)} L/100`;
+
+      renderFuelPriceChart(fuelList);
+
+      // 3. PESTAÑA SERVICIOS / MANTENIMIENTO
+      document.getElementById('srv-count-label').textContent = `${srvList.length} ${srvList.length === 1 ? 'servicio registrado' : 'servicios registrados'}`;
+      document.getElementById('srv-total-cost').textContent = `$${totalSrvCost.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+      document.getElementById('srv-cost-day').textContent = `$${(totalSrvCost / days).toFixed(2)}`;
+      document.getElementById('srv-cost-km').textContent = totalDist > 0 ? `$${(totalSrvCost / totalDist).toFixed(2)}` : '$0.00';
+      document.getElementById('srv-avg-visit').textContent = srvList.length ? `$${(totalSrvCost / srvList.length).toFixed(2)}` : '$0.00';
+
+      renderServiceDetails(srvList, totalSrvCost);
+    }
+
+    function renderServiceDetails(srvList, totalSrvCost) {
+      const breakdownEl = document.getElementById('srv-breakdown-list');
+      const recentEl = document.getElementById('srv-recent-list');
+
+      if (!srvList.length) {
+        breakdownEl.innerHTML = `<p class="text-xs text-slate-400 text-center py-4">No hay registros de mantenimiento en este período. Usa el botón <strong>+</strong> para agregar uno.</p>`;
+        recentEl.innerHTML = `<p class="text-xs text-slate-400 text-center py-4">Sin servicios registrados aún.</p>`;
+        return;
+      }
+
+      // Agrupar por tipo de servicio
+      const groups = {};
+      srvList.forEach(r => {
+        const type = r.serviceType || 'Mantenimiento General';
+        if (!groups[type]) groups[type] = { count: 0, total: 0 };
+        groups[type].count += 1;
+        groups[type].total += Number(r.amount) || 0;
+      });
+
+      const sortedGroups = Object.entries(groups).sort((a, b) => b[1].total - a[1].total);
+      breakdownEl.innerHTML = sortedGroups.map(([name, info]) => {
+        const pct = totalSrvCost > 0 ? Math.round((info.total / totalSrvCost) * 100) : 0;
+        return `
+          <div class="space-y-1">
+            <div class="flex justify-between text-xs">
+              <span class="font-semibold text-slate-700">${name} <span class="text-slate-400 font-normal">(${info.count})</span></span>
+              <span class="font-bold text-stone-700">$${info.total.toFixed(2)} <span class="text-[10px] text-slate-400">(${pct}%)</span></span>
+            </div>
+            <div class="w-full bg-slate-100 h-2 rounded-full overflow-hidden">
+              <div class="bg-stone-600 h-full rounded-full" style="width: ${pct}%"></div>
+            </div>
+          </div>
+        `;
+      }).join('');
+
+      // Lista reciente
+      const recent = [...srvList].reverse().slice(0, 10);
+      recentEl.innerHTML = recent.map(r => `
+        <div class="py-2.5 flex items-center justify-between gap-2">
+          <div class="min-w-0">
+            <p class="text-xs font-bold text-slate-800 truncate">${r.serviceType || 'Servicio de Taller'}</p>
+            <p class="text-[11px] text-slate-400">${r.date} · ${Number(r.odometer).toLocaleString()} km ${r.provider ? '· ' + r.provider : ''}</p>
+          </div>
+          <span class="text-xs font-extrabold text-stone-700 shrink-0">$${Number(r.amount).toFixed(2)}</span>
+        </div>
+      `).join('');
+    }
+
+    function renderGeneralChart(list) {
+      const ctx = document.getElementById('chartGeneral').getContext('2d');
+      const months = {};
+      list.forEach(r => {
+        const m = r.date.slice(0, 7);
+        if (!months[m]) months[m] = { fuel: 0, srv: 0 };
+        if (r.category === 'gasolina') months[m].fuel += Number(r.amount) || 0;
+        else months[m].srv += Number(r.amount) || 0;
+      });
+
+      const labels = Object.keys(months).sort().slice(-12);
+      const fuelData = labels.map(m => months[m].fuel);
+      const srvData = labels.map(m => months[m].srv);
+
+      if (chartGeneralInstance) chartGeneralInstance.destroy();
+      chartGeneralInstance = new Chart(ctx, {
+        type: 'bar',
+        data: {
+          labels,
+          datasets: [
+            { label: 'Combustible ($)', data: fuelData, backgroundColor: '#f59e0b', borderRadius: 4 },
+            { label: 'Servicios ($)', data: srvData, backgroundColor: '#57534e', borderRadius: 4 }
+          ]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: { legend: { position: 'bottom', labels: { boxWidth: 10, font: { size: 10 } } } },
+          scales: {
+            x: { stacked: true, grid: { display: false }, ticks: { font: { size: 10 } } },
+            y: { stacked: true, ticks: { font: { size: 10 } } }
+          }
+        }
+      });
+    }
+
+    function renderFuelPriceChart(fuelList) {
+      const ctx = document.getElementById('chartFuelPrice').getContext('2d');
+      const recent = fuelList.slice(-20);
+      const labels = recent.map(r => r.date.slice(5));
+      const data = recent.map(r => (Number(r.volume) > 0 ? +(Number(r.amount) / Number(r.volume)).toFixed(3) : 0));
+
+      if (chartFuelPriceInstance) chartFuelPriceInstance.destroy();
+      chartFuelPriceInstance = new Chart(ctx, {
+        type: 'line',
+        data: {
+          labels,
+          datasets: [{
+            label: 'Precio / Gal ($)',
+            data,
+            borderColor: '#f59e0b',
+            backgroundColor: 'rgba(245, 158, 11, 0.15)',
+            fill: true,
+            tension: 0.3,
+            pointRadius: 3
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: { legend: { display: false } },
+          scales: {
+            x: { grid: { display: false }, ticks: { font: { size: 10 } } },
+            y: { ticks: { font: { size: 10 } } }
+          }
+        }
+      });
+    }
+
+    // ==================== HISTORIAL Y VEHÍCULOS ====================
+    function setHistoryFilter(f) {
+      currentHistoryFilter = f;
+      ['all', 'gasolina', 'mantenimiento'].forEach(k => {
+        const btn = document.getElementById(`hfilter-${k}`);
+        if (k === f) {
+          btn.className = 'px-3 py-1.5 rounded-full text-xs font-bold bg-teal-700 text-white';
+        } else {
+          btn.className = 'px-3 py-1.5 rounded-full text-xs font-semibold bg-white text-slate-600 border border-slate-200';
+        }
+      });
+      renderHistory();
+    }
+
+    function renderHistory() {
+      const container = document.getElementById('historyListContainer');
+      const list = records
+        .filter(r => (selectedVehicle === 'ALL' || r.plate === selectedVehicle))
+        .filter(r => currentHistoryFilter === 'all' || r.category === currentHistoryFilter)
+        .sort((a, b) => b.date.localeCompare(a.date) || (Number(b.odometer) - Number(a.odometer)));
+
+      if (!list.length) {
+        container.innerHTML = `<div class="bg-white rounded-2xl p-8 text-center text-slate-400 text-xs card-shadow">No hay registros para mostrar.</div>`;
+        return;
+      }
+
+      container.innerHTML = list.map(r => {
+        const isFuel = r.category === 'gasolina';
+        const priceGal = (isFuel && Number(r.volume) > 0) ? `$${(Number(r.amount) / Number(r.volume)).toFixed(2)}/gal` : '';
+        return `
+          <div class="bg-white rounded-2xl p-3.5 card-shadow border border-slate-100 flex items-center justify-between gap-3">
+            <div class="flex items-center gap-3 min-w-0">
+              <div class="w-10 h-10 rounded-xl ${isFuel ? 'bg-amber-100 text-amber-600' : 'bg-stone-100 text-stone-700'} flex items-center justify-center shrink-0">
+                <i class="fa-solid ${isFuel ? 'fa-gas-pump' : 'fa-wrench'}"></i>
+              </div>
+              <div class="min-w-0">
+                <p class="text-xs font-bold text-slate-800 truncate">
+                  ${isFuel ? `Combustible (${Number(r.volume).toFixed(2)} gal)` : (r.serviceType || 'Servicio')}
+                </p>
+                <p class="text-[11px] text-slate-400 truncate">
+                  ${r.date} · ${Number(r.odometer).toLocaleString()} km · <span class="font-semibold text-slate-500">${r.plate}</span>
+                </p>
+                ${r.notes ? `<p class="text-[11px] text-slate-400 italic truncate">${r.notes}</p>` : ''}
+              </div>
+            </div>
+            <div class="text-right shrink-0">
+              <p class="text-sm font-extrabold ${isFuel ? 'text-amber-600' : 'text-stone-700'}">$${Number(r.amount).toFixed(2)}</p>
+              ${priceGal ? `<p class="text-[10px] text-slate-400">${priceGal}</p>` : ''}
+              <button onclick="deleteRecord('${r.id}')" class="text-[10px] text-rose-400 hover:text-rose-600 mt-0.5">Eliminar</button>
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    function renderVehicles() {
+      const container = document.getElementById('vehiclesListContainer');
+      container.innerHTML = vehicles.map(v => {
+        const vRecs = records.filter(r => r.plate === v.plate);
+        const totalSpent = vRecs.reduce((s, r) => s + (Number(r.amount) || 0), 0);
+        return `
+          <div class="bg-white rounded-2xl p-4 card-shadow border border-slate-100 space-y-2">
             <div class="flex items-center justify-between">
-                <h2 class="text-lg font-bold text-slate-800 flex items-center gap-2">
-                    <i data-lucide="car" class="w-5 h-5 text-blue-600"></i> Vehículos de la Empresa
-                </h2>
-                <button onclick="openNewVehicleForm()" class="text-xs bg-blue-600 text-white font-bold px-3 py-1.5 rounded-lg flex items-center gap-1 shadow">
-                    <i data-lucide="plus" class="w-3.5 h-3.5"></i> Agregar
-                </button>
+              <div>
+                <span class="text-[11px] font-bold px-2 py-0.5 rounded-md bg-teal-50 text-teal-700">${v.plate}</span>
+                <h3 class="text-sm font-extrabold text-slate-800 mt-1">${v.name}</h3>
+              </div>
+              <div class="text-right">
+                <p class="text-xs text-slate-400">Odómetro</p>
+                <p class="text-sm font-extrabold text-slate-700">${Number(v.odometer).toLocaleString()} km</p>
+              </div>
             </div>
-
-            <!-- Formulario Crear / Editar Vehículo -->
-            <div id="vehicleFormContainer" class="hidden bg-white p-4 rounded-xl border border-slate-200 shadow-md space-y-3">
-                <div class="flex items-center justify-between">
-                    <h3 id="vehicleFormTitle" class="text-sm font-bold text-slate-700">Registrar Nuevo Vehículo</h3>
-                    <button onclick="closeVehicleForm()" class="text-slate-400 hover:text-slate-600">
-                        <i data-lucide="x" class="w-4 h-4"></i>
-                    </button>
-                </div>
-                <input type="hidden" id="editingOriginalPlate" value="">
-                <div class="grid grid-cols-2 gap-2">
-                    <div>
-                        <label class="block text-[10px] font-semibold text-slate-500 mb-0.5">Placa / Matrícula *</label>
-                        <input type="text" id="vPlate" placeholder="Ej. P-123456" class="w-full border border-slate-300 p-2 rounded text-xs uppercase outline-none focus:ring-2 focus:ring-blue-500">
-                    </div>
-                    <div>
-                        <label class="block text-[10px] font-semibold text-slate-500 mb-0.5">Marca / Modelo</label>
-                        <input type="text" id="vModel" placeholder="Ej. Toyota Hilux" class="w-full border border-slate-300 p-2 rounded text-xs outline-none focus:ring-2 focus:ring-blue-500">
-                    </div>
-                </div>
-                <div class="grid grid-cols-2 gap-2">
-                    <div>
-                        <label class="block text-[10px] font-semibold text-slate-500 mb-0.5">Odómetro Actual (Km)</label>
-                        <input type="number" id="vOdo" placeholder="Ej. 45200" class="w-full border border-slate-300 p-2 rounded text-xs outline-none focus:ring-2 focus:ring-blue-500">
-                    </div>
-                    <div>
-                        <label class="block text-[10px] font-semibold text-slate-500 mb-0.5">Vendedor / Técnico</label>
-                        <input type="text" id="vTech" placeholder="Nombre asignado" class="w-full border border-slate-300 p-2 rounded text-xs outline-none focus:ring-2 focus:ring-blue-500">
-                    </div>
-                </div>
-                <div class="flex gap-2 pt-1">
-                    <button onclick="saveVehicle()" class="flex-1 bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-2 rounded-lg text-xs shadow flex items-center justify-center gap-1">
-                        <i data-lucide="check" class="w-3.5 h-3.5"></i>
-                        <span id="vehicleSaveBtnText">Guardar Vehículo</span>
-                    </button>
-                    <button id="deleteVehicleBtn" onclick="deleteCurrentEditingVehicle()" class="hidden bg-red-50 hover:bg-red-100 text-red-600 border border-red-200 font-bold px-3 py-2 rounded-lg text-xs flex items-center justify-center gap-1">
-                        <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
-                        <span>Borrar</span>
-                    </button>
-                </div>
+            <div class="pt-2 border-t border-slate-100 flex items-center justify-between text-xs text-slate-500">
+              <span>${vRecs.length} registros · Total: <strong>$${totalSpent.toFixed(2)}</strong></span>
+              <button onclick="deleteVehicle('${v.plate}')" class="text-rose-500 font-semibold">Eliminar</button>
             </div>
+          </div>
+        `;
+      }).join('');
+    }
 
-            <div id="vehiclesList" class="space-y-2.5"></div>
-        </section>
+    function renderAll() {
+      renderReports();
+      renderHistory();
+      renderVehicles();
+    }
 
-    </main>
+    // ==================== MODALES Y CRUD ====================
+    function openRecordModal() {
+      document.getElementById('recordForm').reset();
+      document.getElementById('recId').value = '';
+      document.getElementById('recDate').value = new Date().toISOString().split('T')[0];
+      if (selectedVehicle !== 'ALL') {
+        document.getElementById('recVehicle').value = selectedVehicle;
+      }
+      setRecordCategory(currentReportSubTab === 'service' ? 'mantenimiento' : 'gasolina');
+      document.getElementById('recordModal').classList.remove('hidden');
+    }
 
-    <!-- MODAL SETTINGS (BACKUP, RESTAURAR E IMPORTAR CSV) -->
-    <div id="settingsModal" class="hidden fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-end sm:items-center justify-center p-0 sm:p-4">
-        <div class="bg-white w-full max-w-md rounded-t-3xl sm:rounded-2xl shadow-2xl max-h-[92vh] overflow-y-auto p-5 space-y-4">
-            
-            <!-- Encabezado Settings -->
-            <div class="flex items-center justify-between border-b border-slate-100 pb-3">
-                <div class="flex items-center gap-2.5">
-                    <div class="p-2.5 rounded-xl bg-blue-100 text-blue-700">
-                        <i data-lucide="settings" class="w-5 h-5"></i>
-                    </div>
-                    <div>
-                        <h3 class="font-bold text-base text-slate-800">Ajustes y Datos</h3>
-                        <p class="text-[11px] text-slate-400">Copias de seguridad e importación CSV</p>
-                    </div>
-                </div>
-                <button onclick="closeSettingsModal()" class="p-2 bg-slate-100 hover:bg-slate-200 rounded-full text-slate-500">
-                    <i data-lucide="x" class="w-4 h-4"></i>
-                </button>
-            </div>
+    function closeRecordModal() {
+      document.getElementById('recordModal').classList.add('hidden');
+    }
 
-            <!-- SECCIÓN 1: IMPORTAR CSV DE VEHÍCULOS -->
-            <div class="bg-emerald-50/70 border border-emerald-200 rounded-2xl p-4 space-y-2.5">
-                <div class="flex items-center gap-2 text-emerald-800 font-bold text-sm">
-                    <i data-lucide="file-spreadsheet" class="w-4 h-4 text-emerald-600"></i>
-                    <span>Importar Vehículo e Historial (CSV)</span>
-                </div>
-                <p class="text-[11px] text-slate-600 leading-relaxed">
-                    Sube un archivo <strong>.csv</strong> (como los generados de Creta Grand 2024 o Creta 2024). Si el vehículo no existe en la app, se creará automáticamente junto con todos sus registros sin duplicar datos.
-                </p>
-                
-                <div class="pt-1">
-                    <label class="block text-[10px] font-bold text-slate-500 uppercase mb-1">Asignar a placa (Opcional si el CSV ya la trae):</label>
-                    <select id="csvTargetVehicleSelect" class="w-full bg-white border border-slate-300 rounded-lg px-3 py-2 text-xs font-semibold text-slate-700 outline-none mb-2.5">
-                        <option value="AUTO">Detectar automáticamente desde el CSV (Recomendado)</option>
-                    </select>
+    function setRecordCategory(cat) {
+      document.getElementById('recCategory').value = cat;
+      const isFuel = cat === 'gasolina';
+      document.getElementById('fuelFieldsGroup').classList.toggle('hidden', !isFuel);
+      document.getElementById('serviceFieldsGroup').classList.toggle('hidden', isFuel);
 
-                    <input type="file" id="csvImportInput" accept=".csv,text/csv" class="hidden" onchange="handleCSVImport(event)">
-                    <button onclick="document.getElementById('csvImportInput').click()" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-2.5 px-4 rounded-xl text-xs shadow flex items-center justify-center gap-2 transition-transform active:scale-95">
-                        <i data-lucide="upload" class="w-4 h-4"></i>
-                        <span>Seleccionar Archivo CSV</span>
-                    </button>
-                </div>
-            </div>
+      document.getElementById('btnCatGas').className = isFuel
+        ? 'py-2 rounded-xl text-xs font-bold bg-amber-500 text-white shadow-xs transition'
+        : 'py-2 rounded-xl text-xs font-bold text-slate-600 transition';
+      document.getElementById('btnCatSrv').className = !isFuel
+        ? 'py-2 rounded-xl text-xs font-bold bg-stone-700 text-white shadow-xs transition'
+        : 'py-2 rounded-xl text-xs font-bold text-slate-600 transition';
+    }
 
-            <!-- SECCIÓN 2: BACKUP COMPLETO (JSON) -->
-            <div class="bg-slate-50 border border-slate-200 rounded-2xl p-4 space-y-3">
-                <div class="flex items-center gap-2 text-slate-800 font-bold text-sm">
-                    <i data-lucide="database-backup" class="w-4 h-4 text-blue-600"></i>
-                    <span>Copia de Seguridad (Backup Total)</span>
-                </div>
-                <p class="text-[11px] text-slate-500 leading-relaxed">
-                    Descarga un respaldo completo con todos tus vehículos, registros, ajustes y fotos de facturas, o restaura un respaldo previo.
-                </p>
+    function calcFuelHelper() {
+      const amt = parseFloat(document.getElementById('recAmount').value) || 0;
+      const vol = parseFloat(document.getElementById('recVolume').value) || 0;
+      const ppg = vol > 0 ? (amt / vol).toFixed(3) : '0.00';
+      document.getElementById('fuelPricePreview').innerHTML = `Precio calculado: <strong>$${ppg} / gal</strong>`;
+    }
 
-                <div class="grid grid-cols-2 gap-2.5 pt-1">
-                    <button onclick="downloadFullBackup()" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2.5 px-3 rounded-xl text-xs shadow flex items-center justify-center gap-1.5 transition-transform active:scale-95">
-                        <i data-lucide="download" class="w-4 h-4"></i>
-                        <span>Hacer Backup</span>
-                    </button>
+    function saveRecord(e) {
+      e.preventDefault();
+      const plate = document.getElementById('recVehicle').value;
+      const category = document.getElementById('recCategory').value;
+      const odometer = parseFloat(document.getElementById('recOdometer').value) || 0;
+      const amount = parseFloat(document.getElementById('recAmount').value) || 0;
 
-                    <input type="file" id="backupRestoreInput" accept=".json,application/json" class="hidden" onchange="restoreFullBackup(event)">
-                    <button onclick="document.getElementById('backupRestoreInput').click()" class="bg-white hover:bg-slate-100 text-slate-700 border border-slate-300 font-bold py-2.5 px-3 rounded-xl text-xs shadow-2xs flex items-center justify-center gap-1.5 transition-transform active:scale-95">
-                        <i data-lucide="rotate-ccw" class="w-4 h-4 text-amber-600"></i>
-                        <span>Recuperar Backup</span>
-                    </button>
-                </div>
-            </div>
+      const newRec = {
+        id: String(Date.now()),
+        plate,
+        date: document.getElementById('recDate').value,
+        category,
+        odometer,
+        amount,
+        volume: category === 'gasolina' ? (parseFloat(document.getElementById('recVolume').value) || 0) : 0,
+        fuelType: document.getElementById('recFuelType').value,
+        fullTank: document.getElementById('recFullTank').checked,
+        serviceType: category !== 'gasolina' ? document.getElementById('recServiceType').value : '',
+        provider: category !== 'gasolina' ? document.getElementById('recProvider').value : '',
+        notes: document.getElementById('recNotes').value
+      };
 
-            <!-- Estado actual de la base local -->
-            <div id="settingsStatsFooter" class="text-center text-[11px] text-slate-400 pt-1">
-                0 vehículos · 0 registros almacenados en este dispositivo
-            </div>
+      records.push(newRec);
 
-        </div>
-    </div>
+      // Actualizar odómetro si es mayor
+      const veh = vehicles.find(v => v.plate === plate);
+      if (veh && odometer > Number(veh.odometer)) {
+        veh.odometer = odometer;
+      }
 
-    <!-- MODAL DETALLE COMPLETO Y EDICIÓN DE REGISTRO -->
-    <div id="recordModal" class="hidden fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-end sm:items-center justify-center p-0 sm:p-4">
-        <div class="bg-white w-full max-w-md rounded-t-3xl sm:rounded-2xl shadow-2xl max-h-[92vh] overflow-y-auto p-5 space-y-4">
-            
-            <!-- Encabezado Modal -->
-            <div class="flex items-center justify-between border-b border-slate-100 pb-3">
-                <div class="flex items-center gap-2.5">
-                    <div id="modalCatBadge" class="p-2.5 rounded-xl bg-amber-100 text-amber-700">
-                        <i data-lucide="fuel" class="w-5 h-5"></i>
-                    </div>
-                    <div>
-                        <h3 id="modalTitle" class="font-bold text-base text-slate-800">Ficha Completa</h3>
-                        <p id="modalSubtitle" class="text-[11px] text-slate-400">Vehículo P-123456</p>
-                    </div>
-                </div>
-                <button onclick="closeRecordModal()" class="p-2 bg-slate-100 hover:bg-slate-200 rounded-full text-slate-500">
-                    <i data-lucide="x" class="w-4 h-4"></i>
-                </button>
-            </div>
+      persistData();
+      populateVehicleSelectors();
+      closeRecordModal();
+      renderAll();
+      showToast('Registro guardado correctamente');
+    }
 
-            <!-- VISTA DE DETALLE COMPLETO (SOLO LECTURA) -->
-            <div id="modalViewMode" class="space-y-3">
-                <div class="grid grid-cols-2 gap-2.5 bg-slate-50 p-3.5 rounded-xl border border-slate-200/80 text-xs">
-                    <div>
-                        <span class="text-[10px] text-slate-400 block uppercase font-semibold">Categoría</span>
-                        <span id="viewCat" class="font-bold text-slate-800 capitalize">Gasolina</span>
-                    </div>
-                    <div>
-                        <span class="text-[10px] text-slate-400 block uppercase font-semibold">Fecha</span>
-                        <span id="viewDate" class="font-bold text-slate-800">2026-10-20</span>
-                    </div>
-                    <div>
-                        <span class="text-[10px] text-slate-400 block uppercase font-semibold">Odómetro</span>
-                        <span id="viewOdo" class="font-bold text-slate-800">45,200 Km</span>
-                    </div>
-                    <div>
-                        <span class="text-[10px] text-slate-400 block uppercase font-semibold">Nº Factura</span>
-                        <span id="viewInvoice" class="font-bold text-slate-800">F-9021</span>
-                    </div>
-                    <div class="col-span-2">
-                        <span class="text-[10px] text-slate-400 block uppercase font-semibold">Estación / Proveedor</span>
-                        <span id="viewStation" class="font-bold text-slate-800">Gasolinera Uno</span>
-                    </div>
-                    
-                    <!-- Bloque específico de rendimiento de gasolina -->
-                    <div id="viewFuelRow" class="col-span-2 border-t border-slate-200 pt-2.5 space-y-2">
-                        <div class="grid grid-cols-3 gap-2">
-                            <div>
-                                <span class="text-[10px] text-slate-400 block uppercase font-semibold">Volumen</span>
-                                <span id="viewFuelAmount" class="font-bold text-amber-700">12.1 Gal</span>
-                            </div>
-                            <div>
-                                <span class="text-[10px] text-slate-400 block uppercase font-semibold">Precio/Unidad</span>
-                                <span id="viewUnitPrice" class="font-bold text-slate-800">$4.01/Gal</span>
-                            </div>
-                            <div>
-                                <span class="text-[10px] text-slate-400 block uppercase font-semibold">Tanque Lleno</span>
-                                <span id="viewFullTank" class="font-bold text-emerald-700">Sí</span>
-                            </div>
-                        </div>
-                        <div id="viewEfficiencyBanner" class="bg-emerald-50 border border-emerald-200 rounded-lg p-2.5 flex items-center justify-between">
-                            <div>
-                                <span class="text-[10px] text-emerald-700 font-bold uppercase block">Rendimiento del tramo</span>
-                                <span id="viewDistanceDelta" class="text-[11px] text-emerald-600">+400 km recorridos</span>
-                            </div>
-                            <div class="text-right">
-                                <span id="viewEffMain" class="font-black text-sm text-emerald-800 block">33.1 Km/Gal</span>
-                                <span id="viewEffSub" class="text-[10px] text-emerald-600">11.45 L/100km · $0.12/km</span>
-                            </div>
-                        </div>
-                    </div>
+    function deleteRecord(id) {
+      if (!confirm('¿Eliminar este registro?')) return;
+      records = records.filter(r => String(r.id) !== String(id));
+      persistData();
+      renderAll();
+      showToast('Registro eliminado');
+    }
 
-                    <div class="col-span-2 border-t border-slate-200 pt-2 flex items-center justify-between">
-                        <div>
-                            <span class="text-[10px] text-slate-400 block uppercase font-semibold">Monto Pagado</span>
-                            <span id="viewTxCost" class="font-bold text-slate-700">$48.50 USD</span>
-                        </div>
-                        <div class="text-right">
-                            <span class="text-[10px] text-slate-400 block uppercase font-semibold">En Moneda Base</span>
-                            <span id="viewBaseCost" class="font-black text-base text-blue-600">$48.50</span>
-                        </div>
-                    </div>
-                </div>
+    function openVehicleModal() {
+      document.getElementById('vehicleModal').classList.remove('hidden');
+    }
+    function closeVehicleModal() {
+      document.getElementById('vehicleModal').classList.add('hidden');
+    }
 
-                <div class="bg-slate-50 p-3 rounded-xl border border-slate-200/80 text-xs">
-                    <span class="text-[10px] text-slate-400 block uppercase font-semibold mb-1">Notas / Observaciones</span>
-                    <p id="viewNotes" class="text-slate-700 whitespace-pre-line">Sin observaciones.</p>
-                </div>
+    function saveVehicle(e) {
+      e.preventDefault();
+      const plate = document.getElementById('vehPlate').value.trim().toUpperCase();
+      const name = document.getElementById('vehName').value.trim();
+      const odometer = parseFloat(document.getElementById('vehOdo').value) || 0;
 
-                <div id="viewPhotoContainer" class="hidden space-y-1">
-                    <span class="text-[10px] text-slate-400 block uppercase font-semibold">Foto de Comprobante</span>
-                    <img id="viewPhotoImg" src="" alt="Comprobante" class="w-full max-h-60 object-contain rounded-xl border border-slate-200 bg-slate-50">
-                </div>
+      const existing = vehicles.find(v => v.plate === plate);
+      if (existing) {
+        existing.name = name;
+        existing.odometer = odometer;
+      } else {
+        vehicles.push({ plate, name, odometer });
+      }
+      persistData();
+      populateVehicleSelectors();
+      closeVehicleModal();
+      renderAll();
+      showToast('Vehículo guardado');
+    }
 
-                <div class="flex gap-2.5 pt-2">
-                    <button onclick="switchModalToEdit()" class="flex-1 bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 rounded-xl text-xs shadow flex items-center justify-center gap-1.5">
-                        <i data-lucide="pencil" class="w-4 h-4"></i>
-                        <span>Editar Registro</span>
-                    </button>
-                    <button onclick="deleteRecordFromModal()" class="bg-red-50 hover:bg-red-100 text-red-600 border border-red-200 font-bold px-4 py-3 rounded-xl text-xs flex items-center justify-center gap-1.5">
-                        <i data-lucide="trash-2" class="w-4 h-4"></i>
-                        <span>Borrar</span>
-                    </button>
-                </div>
-            </div>
+    function deleteVehicle(plate) {
+      if (!confirm(`¿Eliminar vehículo ${plate}?`)) return;
+      vehicles = vehicles.filter(v => v.plate !== plate);
+      persistData();
+      populateVehicleSelectors();
+      renderAll();
+    }
 
-            <!-- VISTA DE EDICIÓN (FORMULARIO) -->
-            <form id="modalEditForm" onsubmit="saveEditedRecord(event)" class="hidden space-y-3">
-                <div>
-                    <label class="block text-[11px] font-bold text-slate-600 mb-1">Categoría</label>
-                    <div class="grid grid-cols-2 gap-2">
-                        <button type="button" onclick="setEditCategory('gasolina')" id="editCatBtn-gasolina" class="py-2 px-3 rounded-lg font-bold text-xs flex items-center justify-center gap-1.5 border-2 border-blue-600 bg-blue-50 text-blue-700">
-                            <i data-lucide="fuel" class="w-3.5 h-3.5"></i> Gasolina
-                        </button>
-                        <button type="button" onclick="setEditCategory('taller')" id="editCatBtn-taller" class="py-2 px-3 rounded-lg font-bold text-xs flex items-center justify-center gap-1.5 border-2 border-slate-200 bg-white text-slate-600">
-                            <i data-lucide="wrench" class="w-3.5 h-3.5"></i> Taller / Manten.
-                        </button>
-                    </div>
-                </div>
+    // ==================== AJUSTES: CSV & BACKUP ====================
+    function openSettingsModal() {
+      document.getElementById('settingsModal').classList.remove('hidden');
+    }
+    function closeSettingsModal() {
+      document.getElementById('settingsModal').classList.add('hidden');
+    }
 
-                <div class="grid grid-cols-2 gap-2">
-                    <div>
-                        <label class="block text-[11px] font-semibold text-slate-600 mb-1">Fecha *</label>
-                        <input type="date" id="editDateInput" required class="w-full bg-white border border-slate-300 rounded-lg px-2.5 py-2 text-xs outline-none focus:ring-2 focus:ring-blue-500">
-                    </div>
-                    <div>
-                        <label class="block text-[11px] font-semibold text-slate-600 mb-1">Odómetro (Km) *</label>
-                        <input type="number" id="editOdometerInput" required class="w-full bg-white border border-slate-300 rounded-lg px-2.5 py-2 text-xs outline-none focus:ring-2 focus:ring-blue-500">
-                    </div>
-                </div>
+    function handleCSVImport(event) {
+      const file = event.target.files[0];
+      if (!file) return;
+      const targetPlate = document.getElementById('importTargetVehicle').value;
 
-                <div id="editGasolineFields" class="space-y-2.5 bg-amber-50/70 p-2.5 rounded-xl border border-amber-200">
-                    <div class="grid grid-cols-2 gap-2">
-                        <div>
-                            <label class="block text-[11px] font-semibold text-slate-600 mb-1">Volumen</label>
-                            <div class="flex">
-                                <input type="number" step="0.001" id="editFuelAmount" class="w-full bg-white border border-slate-300 rounded-l-lg px-2 py-1.5 text-xs outline-none">
-                                <select id="editFuelUnit" class="bg-slate-100 border border-l-0 border-slate-300 rounded-r-lg px-1.5 text-xs font-bold text-slate-700">
-                                    <option value="Gal">Gal</option>
-                                    <option value="Lts">Lts</option>
-                                </select>
-                            </div>
-                        </div>
-                        <div>
-                            <label class="block text-[11px] font-semibold text-slate-600 mb-1">Combustible</label>
-                            <select id="editFuelType" class="w-full bg-white border border-slate-300 rounded-lg px-2 py-1.5 text-xs outline-none">
-                                <option value="Regular">Regular</option>
-                                <option value="Super">Súper</option>
-                                <option value="Diesel">Diésel</option>
-                            </select>
-                        </div>
-                    </div>
-                    <div class="flex items-center justify-between pt-1 border-t border-amber-200/70">
-                        <span class="text-[11px] font-bold text-slate-700">¿Tanque lleno completo?</span>
-                        <label class="relative inline-flex items-center cursor-pointer">
-                            <input type="checkbox" id="editFullTankInput" class="sr-only peer">
-                            <div class="w-9 h-5 bg-slate-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-emerald-600"></div>
-                        </label>
-                    </div>
-                </div>
+      const reader = new FileReader();
+      reader.onload = function(e) {
+        const text = e.target.result;
+        const lines = text.split(/?
+/).filter(l => l.trim());
+        if (lines.length < 2) return alert('El CSV está vacío.');
 
-                <div>
-                    <label class="block text-[11px] font-semibold text-slate-600 mb-1">Monto de la Factura *</label>
-                    <div class="flex gap-2">
-                        <input type="number" step="0.01" id="editCostInput" required class="flex-1 bg-white border border-slate-300 rounded-lg px-3 py-2 text-xs outline-none focus:ring-2 focus:ring-blue-500">
-                        <select id="editTxCurrency" onchange="handleEditTxCurrencyChange()" class="bg-slate-100 border border-slate-300 rounded-lg px-2.5 py-2 text-xs font-bold text-slate-700">
-                            <option value="USD">USD ($)</option>
-                            <option value="CRC">CRC (₡)</option>
-                            <option value="NIO">NIO (C$)</option>
-                            <option value="HNL">HNL (L)</option>
-                            <option value="GTQ">GTQ (Q)</option>
-                            <option value="MXN">MXN ($)</option>
-                            <option value="DOP">DOP (RD$)</option>
-                            <option value="PAB">PAB (B/.)</option>
-                        </select>
-                    </div>
-                </div>
+        const headers = lines[0].replace(/^﻿/, '').split(',').map(h => h.trim().toLowerCase());
+        let added = 0;
 
-                <div id="editExchangeRateContainer" class="hidden bg-blue-50 p-2.5 rounded-xl border border-blue-200 text-xs">
-                    <div class="flex items-center justify-between">
-                        <span id="editRateLabel" class="font-bold text-blue-800">Tasa de cambio:</span>
-                        <input type="number" step="0.0001" id="editExchangeRateInput" class="w-24 bg-white border border-slate-300 rounded px-2 py-1 text-xs text-right font-bold">
-                    </div>
-                </div>
+        for (let i = 1; i < lines.length; i++) {
+          const cols = lines[i].split(',').map(c => c.trim().replace(/^"|"$/g, ''));
+          const row = {};
+          headers.forEach((h, idx) => row[h] = cols[idx] || '');
 
-                <div class="grid grid-cols-2 gap-2">
-                    <div>
-                        <label class="block text-[11px] font-semibold text-slate-600 mb-1">Gasolinera / Taller</label>
-                        <input type="text" id="editStationInput" placeholder="Ej. Uno" class="w-full bg-white border border-slate-300 rounded-lg px-3 py-2 text-xs outline-none focus:ring-2 focus:ring-blue-500">
-                    </div>
-                    <div>
-                        <label class="block text-[11px] font-semibold text-slate-600 mb-1">Nº Factura</label>
-                        <input type="text" id="editInvoiceNumber" class="w-full bg-white border border-slate-300 rounded-lg px-3 py-2 text-xs outline-none focus:ring-2 focus:ring-blue-500">
-                    </div>
-                </div>
+          const plate = targetPlate !== 'AUTO' ? targetPlate : (row.placa || 'SIN-PLACA').toUpperCase();
+          const vehName = row.vehiculo || plate;
+          const date = row.fecha || new Date().toISOString().split('T')[0];
+          const odometer = parseFloat(row.odometro) || 0;
+          const amount = parseFloat(row.montobase || row.monto) || 0;
+          const volume = parseFloat(row.volumen) || 0;
+          const catRaw = (row.categoria || 'gasolina').toLowerCase();
+          const category = (catRaw.includes('serv') || catRaw.includes('mant') || catRaw.includes('taller')) ? 'mantenimiento' : 'gasolina';
 
-                <div>
-                    <label class="block text-[11px] font-semibold text-slate-600 mb-1">Notas / Observaciones</label>
-                    <textarea id="editNotesInput" rows="2" class="w-full bg-white border border-slate-300 rounded-lg px-3 py-2 text-xs outline-none focus:ring-2 focus:ring-blue-500"></textarea>
-                </div>
+          // Crear vehículo si no existe
+          let veh = vehicles.find(v => v.plate === plate);
+          if (!veh) {
+            veh = { plate, name: vehName, odometer };
+            vehicles.push(veh);
+          } else if (odometer > Number(veh.odometer)) {
+            veh.odometer = odometer;
+          }
 
-                <div>
-                    <label class="block text-[11px] font-semibold text-slate-600 mb-1">Foto de Comprobante</label>
-                    <div onclick="document.getElementById('editReceiptPhoto').click()" class="border-2 border-dashed border-slate-300 rounded-xl p-2.5 text-center bg-slate-50 hover:bg-slate-100 cursor-pointer">
-                        <input type="file" id="editReceiptPhoto" accept="image/*" class="hidden" onchange="previewEditImage(event)">
-                        <div id="editPhotoPreviewArea" class="flex flex-col items-center justify-center space-y-1">
-                            <i data-lucide="camera" class="w-5 h-5 text-slate-400"></i>
-                            <span class="text-[11px] text-slate-500">Tocar para cambiar o agregar foto</span>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="flex gap-2 pt-2">
-                    <button type="submit" class="flex-1 bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-2.5 rounded-xl text-xs shadow flex items-center justify-center gap-1">
-                        <i data-lucide="check" class="w-4 h-4"></i>
-                        <span>Guardar Cambios</span>
-                    </button>
-                    <button type="button" onclick="cancelEditRecord()" class="bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold px-4 py-2.5 rounded-xl text-xs">
-                        Cancelar
-                    </button>
-                </div>
-            </form>
-
-        </div>
-    </div>
-
-    <!-- BARRA DE NAVEGACIÓN INFERIOR -->
-    <nav class="fixed bottom-3 left-0 right-0 z-40 px-4">
-        <div class="max-w-md mx-auto bg-white/90 backdrop-blur-md border border-slate-200/80 rounded-2xl shadow-xl flex items-center justify-around py-2">
-            
-            <button onclick="showTab('register')" id="nav-register" class="flex flex-col items-center space-y-1 text-blue-600 font-bold transition-colors">
-                <i data-lucide="plus-circle" class="w-5 h-5"></i>
-                <span class="text-[10px]">Registro</span>
-            </button>
-
-            <button onclick="showTab('history')" id="nav-history" class="flex flex-col items-center space-y-1 text-slate-400 font-medium transition-colors">
-                <i data-lucide="route" class="w-5 h-5"></i>
-                <span class="text-[10px]">Historial</span>
-            </button>
-
-            <button onclick="showTab('summary')" id="nav-summary" class="flex flex-col items-center space-y-1 text-slate-400 font-medium transition-colors">
-                <i data-lucide="pie-chart" class="w-5 h-5"></i>
-                <span class="text-[10px]">Resumen</span>
-            </button>
-
-            <button onclick="showTab('vehicles')" id="nav-vehicles" class="flex flex-col items-center space-y-1 text-slate-400 font-medium transition-colors">
-                <i data-lucide="car" class="w-5 h-5"></i>
-                <span class="text-[10px]">Vehículos</span>
-            </button>
-
-        </div>
-    </nav>
-
-    <!-- LÓGICA JAVASCRIPT -->
-    <script>
-        const SYMBOLS = { USD:'$', CRC:'₡', NIO:'C$', HNL:'L', GTQ:'Q', MXN:'$', DOP:'RD$', PAB:'B/.' };
-        const DEFAULT_RATES = { USD:1, CRC:515, NIO:36.5, HNL:24.7, GTQ:7.75, MXN:17.1, DOP:58.5, PAB:1 };
-        const MONTHS_ES = ['ENERO', 'FEBRERO', 'MARZO', 'ABRIL', 'MAYO', 'JUNIO', 'JULIO', 'AGOSTO', 'SEPTIEMBRE', 'OCTUBRE', 'NOVIEMBRE', 'DICIEMBRE'];
-        const MONTHS_SHORT = ['ene', 'feb', 'mar', 'abr', 'may', 'jun', 'jul', 'ago', 'sep', 'oct', 'nov', 'dic'];
-
-        let state = {
-            baseCurrency: 'USD',
-            defaultUnit: 'Gal',
-            activeVehiclePlate: 'P-123456',
-            currentCategory: 'gasolina',
-            vehicles: [
-                { plate: 'P-123456', model: 'Toyota Hilux 2022', odometer: 45200, driver: 'Juan Pérez' },
-                { plate: 'P-987654', model: 'Nissan Frontier 2021', odometer: 68100, driver: 'Carlos Gómez' }
-            ],
-            records: [
-                { id: 1, plate: 'P-123456', category: 'gasolina', date: '2026-06-10', odometer: 44325, cost: 43.00, txCurrency: 'USD', baseCost: 43.00, fuelAmount: 9.53, fuelUnit: 'Gal', fuelType: 'Regular', fullTank: true, station: 'Gasolinera Uno', invoice: 'F-8812', notes: '', photo: null },
-                { id: 2, plate: 'P-123456', category: 'gasolina', date: '2026-06-30', odometer: 44760, cost: 37.00, txCurrency: 'USD', baseCost: 37.00, fuelAmount: 8.92, fuelUnit: 'Gal', fuelType: 'Regular', fullTank: true, station: 'Puma', invoice: 'F-8904', notes: '', photo: null },
-                { id: 3, plate: 'P-123456', category: 'taller', date: '2026-07-10', odometer: 45000, cost: 120.00, txCurrency: 'USD', baseCost: 120.00, station: 'Taller Central', invoice: 'T-0044', notes: 'Cambio de aceite y filtro', photo: null },
-                { id: 4, plate: 'P-123456', category: 'gasolina', date: '2026-07-23', odometer: 45200, cost: 44.01, txCurrency: 'USD', baseCost: 44.01, fuelAmount: 9.96, fuelUnit: 'Gal', fuelType: 'Regular', fullTank: true, station: 'Gasolinera Uno', invoice: 'F-9021', notes: '', photo: null }
-            ]
-        };
-
-        let chartInstance = null;
-        let deferredPrompt = null;
-        let expandedRecordId = null;
-        let activeModalRecordId = null;
-        let modalEditCategory = 'gasolina';
-        let modalEditPhotoBase64 = null;
-        let computedMetricsCache = {};
-
-        function getTodayLocal() {
-            const now = new Date();
-            const offset = now.getTimezoneOffset() * 60000;
-            return new Date(now - offset).toISOString().split('T')[0];
-        }
-
-        function formatShortDate(dateStr) {
-            if (!dateStr) return '';
-            const parts = dateStr.split('-');
-            if (parts.length !== 3) return dateStr;
-            const day = parseInt(parts[2], 10);
-            const mIdx = parseInt(parts[1], 10) - 1;
-            return `${day} ${MONTHS_SHORT[mIdx] || ''}`;
-        }
-
-        function formatMonthHeader(ym) {
-            const [year, m] = ym.split('-');
-            const mIdx = parseInt(m, 10) - 1;
-            return `${MONTHS_ES[mIdx] || m} ${year}`;
-        }
-
-        function getPrevMonthName(ym) {
-            const [year, m] = ym.split('-');
-            let mIdx = parseInt(m, 10) - 2;
-            if (mIdx < 0) mIdx = 11;
-            const name = MONTHS_ES[mIdx] || '';
-            return name.charAt(0) + name.slice(1).toLowerCase();
-        }
-
-        document.addEventListener('DOMContentLoaded', () => {
-            loadLocalStorage();
-            document.getElementById('dateInput').value = getTodayLocal();
-            if (window.lucide) lucide.createIcons();
-            renderHeaderVehicles();
-            renderHistory();
-            renderSummary();
-            renderVehicles();
-            setupPWA();
-            registerServiceWorker();
-        });
-
-        function loadLocalStorage() {
-            const saved = localStorage.getItem('fleet_app_state');
-            if (saved) {
-                try { state = JSON.parse(saved); } catch(e) {}
-            }
-            if (!state.vehicles) state.vehicles = [];
-            if (!state.records) state.records = [];
-            if (state.vehicles.length > 0 && !state.vehicles.some(v => v.plate === state.activeVehiclePlate)) {
-                state.activeVehiclePlate = state.vehicles[0].plate;
-            }
-            document.getElementById('headerCurrencySelect').value = state.baseCurrency || 'USD';
-            document.getElementById('headerUnitSelect').value = state.defaultUnit || 'Gal';
-            document.getElementById('fuelUnit').value = state.defaultUnit || 'Gal';
-            document.getElementById('txCurrency').value = state.baseCurrency || 'USD';
-            updateCurrencyPrefixes();
-        }
-
-        function saveState() {
-            localStorage.setItem('fleet_app_state', JSON.stringify(state));
-        }
-
-        // --- SETTINGS: BACKUP, RESTORE E IMPORTAR CSV ---
-
-        function openSettingsModal() {
-            const sel = document.getElementById('csvTargetVehicleSelect');
-            let opts = `<option value="AUTO">Detectar automáticamente desde el CSV (Recomendado)</option>`;
-            state.vehicles.forEach(v => {
-                opts += `<option value="${v.plate}">Forzar asignación a: ${v.plate} (${v.model || 'Vehículo'})</option>`;
+          // Evitar duplicado exacto por placa + fecha + odometro
+          const exists = records.some(r => r.plate === plate && r.date === date && Number(r.odometer) === odometer);
+          if (!exists) {
+            records.push({
+              id: row.id || `${Date.now()}-${i}`,
+              plate,
+              date,
+              category,
+              odometer,
+              amount,
+              volume,
+              fuelType: row.tipocombustible || 'Regular',
+              fullTank: true,
+              serviceType: category === 'mantenimiento' ? (row.tiposervicio || row.notas || 'Mantenimiento') : '',
+              notes: row.notas || ''
             });
-            sel.innerHTML = opts;
-
-            document.getElementById('settingsStatsFooter').innerText =
-                `${state.vehicles.length} vehículo(s) · ${state.records.length} registro(s) guardados localmente`;
-
-            document.getElementById('settingsModal').classList.remove('hidden');
-            if (window.lucide) lucide.createIcons();
+            added++;
+          }
         }
 
-        function closeSettingsModal() {
-            document.getElementById('settingsModal').classList.add('hidden');
+        persistData();
+        populateVehicleSelectors();
+        renderAll();
+        closeSettingsModal();
+        showToast(`Se importaron ${added} registros correctamente`);
+      };
+      reader.readAsText(file);
+    }
+
+    function exportCSV() {
+      const headers = ['ID', 'Placa', 'Vehiculo', 'Fecha', 'Categoria', 'Odometro', 'MontoBase', 'Volumen', 'TipoServicio', 'Notas'];
+      const rows = records.map(r => {
+        const v = vehicles.find(x => x.plate === r.plate);
+        return [r.id, r.plate, v ? v.name : r.plate, r.date, r.category, r.odometer, r.amount, r.volume || 0, r.serviceType || '', r.notes || '']
+          .map(val => `"${String(val).replace(/"/g, '""')}"`).join(',');
+      });
+      const blob = new Blob(['﻿' + [headers.join(','), ...rows].join('
+')], { type: 'text/csv;charset=utf-8;' });
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      a.download = `AseaL_Historial_${new Date().toISOString().split('T')[0]}.csv`;
+      a.click();
+    }
+
+    function downloadBackupJSON() {
+      const payload = { version: 8, exportedAt: new Date().toISOString(), vehicles, records };
+      const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      a.download = `Backup_AseaL_Flota_${new Date().toISOString().split('T')[0]}.json`;
+      a.click();
+    }
+
+    function restoreBackupJSON(event) {
+      const file = event.target.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = function(e) {
+        try {
+          const data = JSON.parse(e.target.result);
+          if (data.vehicles && data.records) {
+            vehicles = data.vehicles;
+            records = data.records;
+            persistData();
+            populateVehicleSelectors();
+            renderAll();
+            closeSettingsModal();
+            showToast('Backup restaurado con éxito');
+          }
+        } catch (err) {
+          alert('Archivo JSON inválido.');
         }
-
-        function downloadFullBackup() {
-            const backupPayload = {
-                app: 'AseaL Flota Vehicular',
-                version: '1.0',
-                exportedAt: new Date().toISOString(),
-                state: state
-            };
-            const jsonStr = JSON.stringify(backupPayload, null, 2);
-            const blob = new Blob([jsonStr], { type: 'application/json' });
-            const url = URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = `Backup_AseaL_Flota_${getTodayLocal()}.json`;
-            a.click();
-            URL.revokeObjectURL(url);
-        }
-
-        function restoreFullBackup(event) {
-            const file = event.target.files[0];
-            if (!file) return;
-
-            const reader = new FileReader();
-            reader.onload = function(e) {
-                try {
-                    const parsed = JSON.parse(e.target.result);
-                    const restoredState = parsed.state ? parsed.state : parsed;
-
-                    if (!Array.isArray(restoredState.vehicles) || !Array.isArray(restoredState.records)) {
-                        alert('El archivo seleccionado no tiene un formato de respaldo válido de AseaL Flota.');
-                        return;
-                    }
-
-                    const confirmMsg = `Se encontraron ${restoredState.vehicles.length} vehículo(s) y ${restoredState.records.length} registro(s) en el respaldo.\n\n¿Deseas reemplazar los datos actuales con este respaldo?`;
-                    if (!confirm(confirmMsg)) return;
-
-                    state = restoredState;
-                    if (state.vehicles.length > 0 && !state.vehicles.some(v => v.plate === state.activeVehiclePlate)) {
-                        state.activeVehiclePlate = state.vehicles[0].plate;
-                    }
-                    saveState();
-                    loadLocalStorage();
-                    renderHeaderVehicles();
-                    renderHistory();
-                    renderSummary();
-                    renderVehicles();
-                    closeSettingsModal();
-                    alert('Respaldo restaurado correctamente.');
-                } catch (err) {
-                    alert('Error al leer el archivo JSON de respaldo: ' + err.message);
-                } finally {
-                    event.target.value = '';
-                }
-            };
-            reader.readAsText(file);
-        }
-
-        function parseCSVLine(line, delimiter) {
-            const result = [];
-            let current = '';
-            let inQuotes = false;
-            for (let i = 0; i < line.length; i++) {
-                const ch = line[i];
-                if (ch === '"') {
-                    if (inQuotes && line[i + 1] === '"') {
-                        current += '"';
-                        i++;
-                    } else {
-                        inQuotes = !inQuotes;
-                    }
-                } else if (ch === delimiter && !inQuotes) {
-                    result.push(current.trim());
-                    current = '';
-                } else {
-                    current += ch;
-                }
-            }
-            result.push(current.trim());
-            return result;
-        }
-
-        function handleCSVImport(event) {
-            const file = event.target.files[0];
-            if (!file) return;
-
-            const forcedPlate = document.getElementById('csvTargetVehicleSelect').value;
-            const reader = new FileReader();
-
-            reader.onload = function(e) {
-                try {
-                    let rawText = e.target.result.replace(/^\uFEFF/, ''); // limpiar BOM UTF-8
-                    const lines = rawText.split(/\r?\n/).filter(l => l.trim().length > 0);
-                    if (lines.length < 2) {
-                        alert('El archivo CSV está vacío o no tiene filas de datos.');
-                        return;
-                    }
-
-                    // Detectar delimitador (, o ;)
-                    const delimiter = (lines[0].split(';').length > lines[0].split(',').length) ? ';' : ',';
-                    const rawHeaders = parseCSVLine(lines[0], delimiter).map(h => h.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, ""));
-
-                    const colIdx = (names) => {
-                        for (const n of names) {
-                            const idx = rawHeaders.indexOf(n);
-                            if (idx !== -1) return idx;
-                        }
-                        return -1;
-                    };
-
-                    const idxId = colIdx(['id']);
-                    const idxPlate = colIdx(['placa', 'plate', 'matricula']);
-                    const idxModel = colIdx(['vehiculo', 'vehicle', 'modelo', 'model']);
-                    const idxDate = colIdx(['fecha', 'date']);
-                    const idxCat = colIdx(['categoria', 'category', 'tipo']);
-                    const idxOdo = colIdx(['odometro', 'odometer', 'km', 'kilometraje']);
-                    const idxCost = colIdx(['montobase', 'monto', 'cost', 'total', 'montototal']);
-                    const idxCurr = colIdx(['monedatx', 'moneda', 'currency']);
-                    const idxVol = colIdx(['volumen', 'fuelamount', 'galones', 'litros', 'cantidad']);
-                    const idxUnit = colIdx(['unidad', 'fuelunit', 'unit']);
-                    const idxFuelType = colIdx(['tipocombustible', 'fueltype', 'combustible']);
-                    const idxFullTank = colIdx(['tanquelleno', 'fulltank', 'lleno']);
-                    const idxStation = colIdx(['estacion', 'station', 'gasolinera', 'proveedor']);
-                    const idxInvoice = colIdx(['factura', 'invoice', 'comprobante']);
-                    const idxNotes = colIdx(['notas', 'notes', 'observaciones']);
-
-                    if (idxDate === -1 || idxOdo === -1 || idxCost === -1) {
-                        alert('El CSV debe tener al menos las columnas: Fecha, Odometro y Monto (o MontoBase).');
-                        return;
-                    }
-
-                    let importedCount = 0;
-                    let skippedDuplicates = 0;
-                    let createdVehicles = [];
-                    let lastImportedPlate = null;
-
-                    for (let i = 1; i < lines.length; i++) {
-                        const cols = parseCSVLine(lines[i], delimiter);
-                        if (cols.length < 3) continue;
-
-                        let plate = '';
-                        if (forcedPlate !== 'AUTO') {
-                            plate = forcedPlate;
-                        } else if (idxPlate !== -1 && cols[idxPlate]) {
-                            plate = cols[idxPlate].toUpperCase().trim();
-                        } else {
-                            plate = state.activeVehiclePlate || 'SIN-PLACA';
-                        }
-
-                        const modelName = (idxModel !== -1 && cols[idxModel]) ? cols[idxModel].trim() : plate;
-                        const dateStr = (cols[idxDate] || '').trim();
-                        const odoVal = parseInt(String(cols[idxOdo] || '0').replace(/[^0-9]/g, ''), 10) || 0;
-                        const costVal = parseFloat(String(cols[idxCost] || '0').replace(/[^0-9.-]/g, '')) || 0;
-
-                        if (!dateStr || odoVal <= 0) continue;
-
-                        // Crear vehículo si no existe todavía
-                        let vehicleObj = state.vehicles.find(v => v.plate === plate);
-                        if (!vehicleObj) {
-                            vehicleObj = { plate: plate, model: modelName, odometer: odoVal, driver: '' };
-                            state.vehicles.push(vehicleObj);
-                            createdVehicles.push(`${plate} (${modelName})`);
-                        }
-
-                        // Evitar duplicados exactos (misma placa + fecha + odómetro + monto)
-                        const isDup = state.records.some(r =>
-                            r.plate === plate &&
-                            r.date === dateStr &&
-                            r.odometer === odoVal &&
-                            Math.abs(r.baseCost - costVal) < 0.02
-                        );
-                        if (isDup) {
-                            skippedDuplicates++;
-                            continue;
-                        }
-
-                        const rawCat = idxCat !== -1 ? (cols[idxCat] || '').toLowerCase() : 'gasolina';
-                        const category = rawCat.includes('taller') || rawCat.includes('mant') ? 'taller' : 'gasolina';
-                        const txCurr = (idxCurr !== -1 && cols[idxCurr]) ? cols[idxCurr].toUpperCase() : state.baseCurrency;
-                        const volVal = idxVol !== -1 ? (parseFloat(String(cols[idxVol] || '0').replace(/[^0-9.-]/g, '')) || 0) : 0;
-                        const unitVal = (idxUnit !== -1 && cols[idxUnit]) ? cols[idxUnit] : (state.defaultUnit || 'Gal');
-                        const fType = (idxFuelType !== -1 && cols[idxFuelType]) ? cols[idxFuelType] : 'Regular';
-                        const notesVal = (idxNotes !== -1 && cols[idxNotes]) ? cols[idxNotes] : '';
-                        const stationVal = (idxStation !== -1 && cols[idxStation]) ? cols[idxStation] : '';
-                        const invoiceVal = (idxInvoice !== -1 && cols[idxInvoice]) ? cols[idxInvoice] : `IMP-${i}`;
-
-                        let isFull = true;
-                        if (idxFullTank !== -1 && cols[idxFullTank]) {
-                            const ft = cols[idxFullTank].toLowerCase();
-                            if (ft === 'no' || ft === 'false' || ft === '0' || ft === 'parcial') isFull = false;
-                        } else if (notesVal.toLowerCase().includes('parcial')) {
-                            isFull = false;
-                        }
-
-                        const recId = (idxId !== -1 && parseInt(cols[idxId], 10))
-                            ? parseInt(cols[idxId], 10) + Math.floor(Math.random() * 1000)
-                            : (Date.now() + i);
-
-                        const newRec = {
-                            id: recId,
-                            plate: plate,
-                            category: category,
-                            date: dateStr,
-                            odometer: odoVal,
-                            cost: costVal,
-                            txCurrency: txCurr,
-                            exchangeRate: 1,
-                            baseCost: costVal,
-                            station: stationVal,
-                            invoice: invoiceVal,
-                            notes: notesVal,
-                            photo: null
-                        };
-
-                        if (category === 'gasolina') {
-                            newRec.fuelAmount = volVal;
-                            newRec.fuelUnit = unitVal;
-                            newRec.fuelType = fType;
-                            newRec.fullTank = isFull;
-                        }
-
-                        state.records.push(newRec);
-                        if (odoVal > vehicleObj.odometer) vehicleObj.odometer = odoVal;
-                        importedCount++;
-                        lastImportedPlate = plate;
-                    }
-
-                    if (lastImportedPlate) {
-                        state.activeVehiclePlate = lastImportedPlate;
-                    }
-
-                    saveState();
-                    renderHeaderVehicles();
-                    renderVehicles();
-                    renderHistory();
-                    renderSummary();
-                    closeSettingsModal();
-                    showTab('history');
-
-                    let summaryMsg = `Importación completada:\n• ${importedCount} registros nuevos agregados.`;
-                    if (createdVehicles.length > 0) {
-                        summaryMsg += `\n• Vehículos creados: ${createdVehicles.join(', ')}`;
-                    }
-                    if (skippedDuplicates > 0) {
-                        summaryMsg += `\n• ${skippedDuplicates} registros omitidos porque ya existían.`;
-                    }
-                    alert(summaryMsg);
-                } catch (err) {
-                    alert('Error al procesar el archivo CSV: ' + err.message);
-                } finally {
-                    event.target.value = '';
-                }
-            };
-            reader.readAsText(file);
-        }
-
-        function changeDefaultUnit(unit) {
-            state.defaultUnit = unit;
-            document.getElementById('fuelUnit').value = unit;
-            saveState();
-            renderHistory();
-            renderSummary();
-        }
-
-        function changeBaseCurrency(curr) {
-            state.baseCurrency = curr;
-            document.getElementById('txCurrency').value = curr;
-            handleTxCurrencyChange();
-            saveState();
-            updateCurrencyPrefixes();
-            renderSummary();
-            renderHistory();
-        }
-
-        function updateCurrencyPrefixes() {
-            document.getElementById('currencyPrefix').innerText = SYMBOLS[state.baseCurrency] || '$';
-        }
-
-        function handleTxCurrencyChange() {
-            const txCurr = document.getElementById('txCurrency').value;
-            const container = document.getElementById('exchangeRateContainer');
-            
-            if (txCurr !== state.baseCurrency) {
-                container.classList.remove('hidden');
-                const rate = DEFAULT_RATES[txCurr] || 1;
-                document.getElementById('rateLabel').innerText = `1 ${state.baseCurrency} = ${rate} ${txCurr}`;
-                document.getElementById('exchangeRateInput').value = rate;
-            } else {
-                container.classList.add('hidden');
-            }
-        }
-
-        function showTab(tabName) {
-            ['register', 'history', 'summary', 'vehicles'].forEach(t => {
-                document.getElementById(`view-${t}`).classList.add('hidden');
-                const btn = document.getElementById(`nav-${t}`);
-                btn.classList.remove('text-blue-600', 'font-bold');
-                btn.classList.add('text-slate-400', 'font-medium');
-            });
-
-            document.getElementById(`view-${tabName}`).classList.remove('hidden');
-            const activeBtn = document.getElementById(`nav-${tabName}`);
-            activeBtn.classList.remove('text-slate-400', 'font-medium');
-            activeBtn.classList.add('text-blue-600', 'font-bold');
-
-            if (tabName === 'summary') renderSummary();
-            if (tabName === 'history') renderHistory();
-            if (tabName === 'vehicles') renderVehicles();
-        }
-
-        function setCategory(cat) {
-            state.currentCategory = cat;
-            const gasBtn = document.getElementById('catBtn-gasolina');
-            const tallerBtn = document.getElementById('catBtn-taller');
-            const gasFields = document.getElementById('gasolineFields');
-            const providerLabel = document.getElementById('providerLabel');
-            const stationInput = document.getElementById('stationInput');
-
-            if (cat === 'gasolina') {
-                gasBtn.className = "py-3 px-4 rounded-xl font-bold text-sm flex items-center justify-center space-x-2 border-2 transition-all border-blue-600 bg-blue-50 text-blue-700";
-                tallerBtn.className = "py-3 px-4 rounded-xl font-bold text-sm flex items-center justify-center space-x-2 border-2 transition-all border-slate-200 bg-white text-slate-600";
-                gasFields.classList.remove('hidden');
-                providerLabel.innerText = 'Gasolinera / Estación';
-                stationInput.placeholder = 'Ej. Uno, Puma, Texaco';
-            } else {
-                tallerBtn.className = "py-3 px-4 rounded-xl font-bold text-sm flex items-center justify-center space-x-2 border-2 transition-all border-blue-600 bg-blue-50 text-blue-700";
-                gasBtn.className = "py-3 px-4 rounded-xl font-bold text-sm flex items-center justify-center space-x-2 border-2 transition-all border-slate-200 bg-white text-slate-600";
-                gasFields.classList.add('hidden');
-                providerLabel.innerText = 'Taller / Proveedor';
-                stationInput.placeholder = 'Ej. Taller Central, Agencia';
-            }
-        }
-
-        function saveRecord(e) {
-            e.preventDefault();
-            if (!state.activeVehiclePlate) {
-                alert('Por favor registra y selecciona un vehículo primero.');
-                showTab('vehicles');
-                return;
-            }
-            
-            const selectedDate = document.getElementById('dateInput').value || getTodayLocal();
-            const cost = parseFloat(document.getElementById('costInput').value);
-            const odometer = parseInt(document.getElementById('odometerInput').value);
-            const txCurr = document.getElementById('txCurrency').value;
-            let baseCost = cost;
-            let exchangeRate = 1;
-
-            if (txCurr !== state.baseCurrency) {
-                exchangeRate = parseFloat(document.getElementById('exchangeRateInput').value) || 1;
-                baseCost = cost / exchangeRate;
-            }
-
-            const newRec = {
-                id: Date.now(),
-                plate: state.activeVehiclePlate,
-                category: state.currentCategory,
-                date: selectedDate,
-                odometer: odometer,
-                cost: cost,
-                txCurrency: txCurr,
-                exchangeRate: exchangeRate,
-                baseCost: baseCost,
-                station: document.getElementById('stationInput').value.trim(),
-                invoice: document.getElementById('invoiceNumber').value.trim() || 'S/N',
-                notes: document.getElementById('notesInput').value.trim(),
-                photo: window.currentPhotoBase64 || null
-            };
-
-            if (state.currentCategory === 'gasolina') {
-                newRec.fuelAmount = parseFloat(document.getElementById('fuelAmount').value) || 0;
-                newRec.fuelUnit = document.getElementById('fuelUnit').value;
-                newRec.fuelType = document.getElementById('fuelType').value;
-                newRec.fullTank = document.getElementById('fullTankInput').checked;
-            }
-
-            state.records.push(newRec);
-            expandedRecordId = newRec.id;
-
-            const v = state.vehicles.find(x => x.plate === state.activeVehiclePlate);
-            if (v && odometer > v.odometer) v.odometer = odometer;
-
-            saveState();
-            renderHeaderVehicles();
-            
-            document.getElementById('expenseForm').reset();
-            document.getElementById('dateInput').value = getTodayLocal();
-            document.getElementById('fuelUnit').value = state.defaultUnit || 'Gal';
-            document.getElementById('txCurrency').value = state.baseCurrency || 'USD';
-            document.getElementById('fullTankInput').checked = true;
-            handleTxCurrencyChange();
-
-            window.currentPhotoBase64 = null;
-            document.getElementById('photoPreviewArea').innerHTML = `
-                <i data-lucide="camera" class="w-6 h-6 text-slate-400"></i>
-                <span class="text-xs text-slate-500 font-medium">Tocar para tomar foto o adjuntar</span>
-            `;
-            if (window.lucide) lucide.createIcons();
-
-            showTab('history');
-        }
-
-        function previewImage(event) {
-            const file = event.target.files[0];
-            if (file) {
-                const reader = new FileReader();
-                reader.onload = function(e) {
-                    window.currentPhotoBase64 = e.target.result;
-                    document.getElementById('photoPreviewArea').innerHTML = `
-                        <img src="${e.target.result}" class="h-20 rounded object-cover shadow">
-                        <span class="text-[10px] text-emerald-600 font-bold">Foto cargada correctamente</span>
-                    `;
-                };
-                reader.readAsDataURL(file);
-            }
-        }
-
-        // --- CÁLCULO DE RENDIMIENTO POR CARGA Y POR MES ---
-        function computeVehicleAnalytics(plate) {
-            const allAsc = state.records
-                .filter(r => r.plate === plate)
-                .sort((a, b) => new Date(a.date) - new Date(b.date) || a.odometer - b.odometer);
-
-            const perRecord = {};
-            let lastFullFuelRecord = null;
-            let pendingLiters = 0;
-            let pendingCost = 0;
-
-            allAsc.forEach((r, idx) => {
-                const prevAny = idx > 0 ? allAsc[idx - 1] : null;
-                const distFromPrevAny = prevAny && r.odometer >= prevAny.odometer ? (r.odometer - prevAny.odometer) : 0;
-
-                const info = {
-                    distFromPrevAny: distFromPrevAny,
-                    distSegment: 0,
-                    liters100: null,
-                    kmPerGal: null,
-                    kmPerLit: null,
-                    unitPrice: null,
-                    costPerKm: null,
-                    isPartial: r.category === 'gasolina' && r.fullTank === false
-                };
-
-                if (r.category === 'gasolina') {
-                    const amt = r.fuelAmount || 0;
-                    const liters = r.fuelUnit === 'Gal' ? amt * 3.78541 : amt;
-
-                    if (amt > 0) {
-                        info.unitPrice = r.baseCost / amt;
-                    }
-
-                    const isFull = r.fullTank !== false;
-
-                    if (!lastFullFuelRecord) {
-                        if (isFull) {
-                            lastFullFuelRecord = r;
-                            pendingLiters = 0;
-                            pendingCost = 0;
-                        }
-                    } else {
-                        if (!isFull) {
-                            pendingLiters += liters;
-                            pendingCost += r.baseCost;
-                        } else {
-                            const totalSegLiters = pendingLiters + liters;
-                            const totalSegCost = pendingCost + r.baseCost;
-                            const segDist = r.odometer - lastFullFuelRecord.odometer;
-
-                            if (segDist > 0 && totalSegLiters > 0) {
-                                const totalSegGallons = totalSegLiters / 3.78541;
-                                info.distSegment = segDist;
-                                info.liters100 = (totalSegLiters / segDist) * 100;
-                                info.kmPerLit = segDist / totalSegLiters;
-                                info.kmPerGal = segDist / totalSegGallons;
-                                info.costPerKm = totalSegCost / segDist;
-                            }
-
-                            lastFullFuelRecord = r;
-                            pendingLiters = 0;
-                            pendingCost = 0;
-                        }
-                    }
-                }
-
-                perRecord[r.id] = info;
-            });
-
-            // Agrupación mensual
-            const monthMap = {};
-            allAsc.forEach(r => {
-                const ym = (r.date || '').slice(0, 7);
-                if (!ym) return;
-                if (!monthMap[ym]) {
-                    monthMap[ym] = {
-                        ym: ym,
-                        totalCost: 0,
-                        fuelCost: 0,
-                        tallerCost: 0,
-                        minOdo: r.odometer,
-                        maxOdo: r.odometer,
-                        effValues: []
-                    };
-                }
-                const m = monthMap[ym];
-                m.totalCost += r.baseCost;
-                if (r.category === 'gasolina') m.fuelCost += r.baseCost;
-                else m.tallerCost += r.baseCost;
-
-                if (r.odometer < m.minOdo) m.minOdo = r.odometer;
-                if (r.odometer > m.maxOdo) m.maxOdo = r.odometer;
-
-                const recCalc = perRecord[r.id];
-                if (recCalc && recCalc.liters100 !== null) {
-                    m.effValues.push(recCalc.liters100);
-                }
-            });
-
-            const sortedMonths = Object.keys(monthMap).sort();
-            sortedMonths.forEach((ym, i) => {
-                const m = monthMap[ym];
-                const prevOdo = i > 0 ? monthMap[sortedMonths[i - 1]].maxOdo : m.minOdo;
-                m.distance = Math.max(0, m.maxOdo - prevOdo);
-                m.avgLiters100 = m.effValues.length > 0
-                    ? (m.effValues.reduce((a, b) => a + b, 0) / m.effValues.length)
-                    : null;
-
-                if (i > 0) {
-                    const prevM = monthMap[sortedMonths[i - 1]];
-                    if (prevM.totalCost > 0) {
-                        m.expenseDiffPct = ((m.totalCost - prevM.totalCost) / prevM.totalCost) * 100;
-                    }
-                }
-            });
-
-            computedMetricsCache = perRecord;
-            return { perRecord, monthMap };
-        }
-
-        function toggleSearchFilter() {
-            const box = document.getElementById('historySearchBox');
-            box.classList.toggle('hidden');
-            if (!box.classList.contains('hidden')) {
-                document.getElementById('historySearchInput').focus();
-            } else {
-                document.getElementById('historySearchInput').value = '';
-                renderHistory();
-            }
-        }
-
-        function toggleExpandRecord(id) {
-            expandedRecordId = (expandedRecordId === id) ? null : id;
-            renderHistory();
-        }
-
-        function renderHistory() {
-            const list = document.getElementById('historyList');
-            const query = (document.getElementById('historySearchInput')?.value || '').trim().toLowerCase();
-            const { perRecord, monthMap } = computeVehicleAnalytics(state.activeVehiclePlate);
-
-            let records = state.records
-                .filter(r => r.plate === state.activeVehiclePlate)
-                .sort((a, b) => new Date(b.date) - new Date(a.date) || b.odometer - a.odometer);
-
-            if (query) {
-                records = records.filter(r =>
-                    (r.station || '').toLowerCase().includes(query) ||
-                    (r.invoice || '').toLowerCase().includes(query) ||
-                    (r.notes || '').toLowerCase().includes(query) ||
-                    (r.category || '').toLowerCase().includes(query)
-                );
-            }
-
-            if (records.length === 0) {
-                list.innerHTML = `<div class="p-8 text-center text-slate-400 text-xs">No hay registros que mostrar para este vehículo.</div>`;
-                return;
-            }
-
-            const sym = SYMBOLS[state.baseCurrency] || '$';
-            let html = '';
-            let currentYm = null;
-
-            records.forEach((r) => {
-                const ym = (r.date || '').slice(0, 7);
-
-                if (ym && ym !== currentYm) {
-                    currentYm = ym;
-                    const m = monthMap[ym];
-                    if (m && !query) {
-                        const prevName = getPrevMonthName(ym);
-                        let trendHtml = '';
-                        if (typeof m.expenseDiffPct === 'number') {
-                            const absPct = Math.abs(m.expenseDiffPct).toFixed(0);
-                            const isMore = m.expenseDiffPct > 0;
-                            trendHtml = `
-                                <div class="text-[11px] text-slate-500 mt-1 flex items-center gap-1">
-                                    <span>Gastos</span>
-                                    <span class="font-bold ${isMore ? 'text-amber-600' : 'text-emerald-600'}">${absPct}% ${isMore ? 'por encima de' : 'por debajo de'}</span>
-                                    <span>${prevName}</span>
-                                </div>
-                            `;
-                        }
-
-                        html += `
-                        <div class="relative flex items-stretch">
-                            <div class="w-12 shrink-0 flex justify-center relative">
-                                <div class="w-3 road-line h-full"></div>
-                            </div>
-                            <div class="flex-1 py-2.5 pr-3.5">
-                                <div class="bg-slate-50 border border-slate-200/90 rounded-xl p-3 shadow-2xs">
-                                    <div class="text-[10px] font-bold tracking-wider text-slate-400 uppercase mb-1">${formatMonthHeader(ym)}</div>
-                                    <div class="text-xs font-bold text-slate-700 flex flex-wrap items-center gap-x-1.5">
-                                        <span class="text-slate-900 font-black">${sym}${m.totalCost.toFixed(2)}</span>
-                                        <span class="text-slate-300">·</span>
-                                        <span>${m.distance.toLocaleString()} km</span>
-                                        ${m.avgLiters100 !== null ? `<span class="text-slate-300">·</span><span class="text-teal-700">${m.avgLiters100.toFixed(2)} L/100km</span>` : ''}
-                                    </div>
-                                    ${trendHtml}
-                                </div>
-                            </div>
-                        </div>
-                        `;
-                    }
-                }
-
-                const calc = perRecord[r.id] || {};
-                const isExpanded = expandedRecordId === r.id;
-                const isGas = r.category === 'gasolina';
-
-                let subtitleParts = [`${r.odometer.toLocaleString()} km`];
-                if (isGas) {
-                    if (calc.liters100 !== null) {
-                        const effText = state.defaultUnit === 'Gal'
-                            ? `${calc.kmPerGal.toFixed(1)} Km/Gal`
-                            : `${calc.liters100.toFixed(2)} L/100km`;
-                        subtitleParts.push(`<span class="font-bold text-slate-700">${effText}</span>`);
-                    } else if (calc.isPartial) {
-                        subtitleParts.push(`<span class="text-amber-600 font-semibold">Parcial</span>`);
-                    }
-                    if (r.fuelAmount) {
-                        subtitleParts.push(`${r.fuelAmount} ${r.fuelUnit || 'Gal'}`);
-                    }
-                } else {
-                    if (r.station) subtitleParts.push(r.station);
-                    else if (r.invoice && r.invoice !== 'S/N') subtitleParts.push(`Fact. ${r.invoice}`);
-                }
-
-                let accordionHtml = '';
-                if (isExpanded) {
-                    const unitPriceStr = calc.unitPrice ? `${sym}${calc.unitPrice.toFixed(2)}/${r.fuelUnit || 'Gal'}` : '';
-                    const effFullStr = calc.liters100 !== null
-                        ? `${calc.liters100.toFixed(2)} L/100km (${calc.kmPerGal.toFixed(1)} Km/Gal)`
-                        : (calc.isPartial ? 'Se calculará al llenar tanque' : 'Primer registro base');
-
-                    accordionHtml = `
-                    <div class="mt-3 pt-3 border-t border-slate-100 space-y-2 text-xs" onclick="event.stopPropagation()">
-                        <div class="text-[10px] font-bold tracking-wider text-slate-400 uppercase">${isGas ? 'COMBUSTIBLE' : 'MANTENIMIENTO / TALLER'}</div>
-                        
-                        ${isGas ? `
-                        <div class="flex items-center justify-between text-slate-600">
-                            <span>Gasolina <span class="text-slate-400">${r.fuelAmount || 0} ${r.fuelUnit || 'Gal'} ${unitPriceStr ? '· ' + unitPriceStr : ''}</span></span>
-                            <span class="font-bold text-slate-800">${sym}${r.baseCost.toFixed(2)}</span>
-                        </div>
-                        <div class="flex items-center justify-between text-slate-600">
-                            <span>Eficiencia de combustible</span>
-                            <span class="font-bold text-teal-700">${effFullStr}</span>
-                        </div>
-                        ${calc.costPerKm ? `
-                        <div class="flex items-center justify-between text-slate-600">
-                            <span>Costo por kilómetro (+${calc.distSegment} km)</span>
-                            <span class="font-semibold text-slate-800">${sym}${calc.costPerKm.toFixed(3)}/km</span>
-                        </div>` : ''}
-                        <div class="flex items-center justify-between text-slate-600">
-                            <span>Tanque llenado por completo</span>
-                            <span class="font-semibold text-slate-800">${r.fullTank !== false ? 'Sí' : 'No (Parcial)'}</span>
-                        </div>
-                        ` : `
-                        <div class="flex items-center justify-between text-slate-600">
-                            <span>Concepto / Notas</span>
-                            <span class="font-semibold text-slate-800 text-right max-w-[180px] truncate">${r.notes || 'Servicio general'}</span>
-                        </div>
-                        `}
-
-                        ${r.station ? `
-                        <div class="flex items-center justify-between text-slate-600">
-                            <span>${isGas ? 'Gasolinera' : 'Taller / Proveedor'}</span>
-                            <span class="font-semibold text-slate-800">${r.station}</span>
-                        </div>` : ''}
-
-                        ${r.notes && isGas ? `
-                        <div class="flex items-center justify-between text-slate-600">
-                            <span>Nota</span>
-                            <span class="font-semibold text-slate-700 text-right max-w-[190px] truncate">${r.notes}</span>
-                        </div>` : ''}
-
-                        ${r.invoice && r.invoice !== 'S/N' ? `
-                        <div class="flex items-center justify-between text-slate-600">
-                            <span>Nº Comprobante</span>
-                            <span class="font-semibold text-slate-800">${r.invoice}</span>
-                        </div>` : ''}
-
-                        <div class="pt-2.5 mt-1 border-t border-slate-100 flex items-center justify-end gap-5 text-slate-500">
-                            <button onclick="deleteRecordDirect(${r.id})" title="Borrar" class="p-1.5 hover:text-red-600 transition-colors flex items-center gap-1 text-[11px] font-semibold">
-                                <i data-lucide="trash-2" class="w-4 h-4"></i>
-                            </button>
-                            <button onclick="openRecordModal(${r.id}, true)" title="Editar" class="p-1.5 hover:text-blue-600 transition-colors flex items-center gap-1 text-[11px] font-semibold">
-                                <i data-lucide="pencil" class="w-4 h-4"></i>
-                            </button>
-                            <button onclick="openRecordModal(${r.id}, false)" title="Ver detalle completo" class="p-1.5 hover:text-teal-600 transition-colors flex items-center gap-1 text-[11px] font-semibold">
-                                <i data-lucide="eye" class="w-4 h-4"></i>
-                            </button>
-                        </div>
-                    </div>
-                    `;
-                }
-
-                html += `
-                <div onclick="toggleExpandRecord(${r.id})" class="relative flex items-stretch cursor-pointer hover:bg-slate-50/80 transition-colors">
-                    <div class="w-12 shrink-0 flex flex-col items-center relative">
-                        <div class="w-3 road-line flex-1"></div>
-                        <div class="w-8 h-8 rounded-full flex items-center justify-center shrink-0 z-10 shadow-sm border-2 border-white ${isGas ? 'bg-amber-500 text-white' : 'bg-blue-600 text-white'}">
-                            <i data-lucide="${isGas ? 'fuel' : 'wrench'}" class="w-4 h-4"></i>
-                        </div>
-                        <div class="w-3 road-line flex-1"></div>
-                    </div>
-
-                    <div class="flex-1 py-3.5 pr-3.5 border-b border-slate-100">
-                        <div class="flex items-start justify-between gap-2">
-                            <div>
-                                <div class="font-bold text-sm text-slate-800 flex items-center gap-1.5">
-                                    <span>${isGas ? 'Gasolina' : 'Taller / Manten.'}</span>
-                                    ${r.photo ? '<i data-lucide="image" class="w-3.5 h-3.5 text-blue-500"></i>' : ''}
-                                </div>
-                                <div class="text-[11px] text-slate-400 mt-0.5 flex flex-wrap items-center gap-x-1.5">
-                                    ${subtitleParts.join(' <span class="text-slate-300">·</span> ')}
-                                </div>
-                            </div>
-                            <div class="text-right shrink-0">
-                                <div class="font-black text-sm text-slate-900">${sym}${r.baseCost.toFixed(2)}</div>
-                                <div class="text-[11px] text-slate-400 mt-0.5">${formatShortDate(r.date)}</div>
-                            </div>
-                        </div>
-                        ${accordionHtml}
-                    </div>
-                </div>
-                `;
-            });
-
-            list.innerHTML = html;
-            if (window.lucide) lucide.createIcons();
-        }
-
-        function deleteRecordDirect(id) {
-            if (!confirm('¿Seguro que deseas borrar este registro?')) return;
-            state.records = state.records.filter(r => r.id !== id);
-            if (expandedRecordId === id) expandedRecordId = null;
-            saveState();
-            renderHistory();
-            renderSummary();
-        }
-
-        // --- FUNCIONES DEL MODAL DE FICHA COMPLETA / EDICIÓN ---
-
-        function openRecordModal(id, startInEdit = false) {
-            const r = state.records.find(x => x.id === id);
-            if (!r) return;
-
-            activeModalRecordId = id;
-            modalEditPhotoBase64 = r.photo || null;
-            const calc = computedMetricsCache[id] || {};
-            const sym = SYMBOLS[state.baseCurrency] || '$';
-
-            const badge = document.getElementById('modalCatBadge');
-            if (r.category === 'gasolina') {
-                badge.className = 'p-2.5 rounded-xl bg-amber-100 text-amber-700';
-                badge.innerHTML = '<i data-lucide="fuel" class="w-5 h-5"></i>';
-            } else {
-                badge.className = 'p-2.5 rounded-xl bg-blue-100 text-blue-700';
-                badge.innerHTML = '<i data-lucide="wrench" class="w-5 h-5"></i>';
-            }
-            document.getElementById('modalTitle').innerText = 'Ficha del Registro';
-            document.getElementById('modalSubtitle').innerText = `Vehículo ${r.plate}`;
-
-            document.getElementById('viewCat').innerText = r.category === 'gasolina' ? 'Gasolina' : 'Taller / Mantenimiento';
-            document.getElementById('viewDate').innerText = r.date;
-            document.getElementById('viewOdo').innerText = `${r.odometer.toLocaleString()} Km`;
-            document.getElementById('viewInvoice').innerText = r.invoice || 'S/N';
-            document.getElementById('viewStation').innerText = r.station || 'No especificado';
-
-            const fuelRow = document.getElementById('viewFuelRow');
-            const effBanner = document.getElementById('viewEfficiencyBanner');
-
-            if (r.category === 'gasolina') {
-                fuelRow.classList.remove('hidden');
-                document.getElementById('viewFuelAmount').innerText = `${r.fuelAmount || 0} ${r.fuelUnit || 'Gal'} (${r.fuelType || 'Regular'})`;
-                document.getElementById('viewUnitPrice').innerText = calc.unitPrice ? `${sym}${calc.unitPrice.toFixed(2)}/${r.fuelUnit || 'Gal'}` : '-';
-                document.getElementById('viewFullTank').innerText = r.fullTank !== false ? 'Sí (100%)' : 'No (Parcial)';
-
-                if (calc.liters100 !== null) {
-                    effBanner.classList.remove('hidden');
-                    document.getElementById('viewDistanceDelta').innerText = `+${calc.distSegment.toLocaleString()} km en el tramo`;
-                    document.getElementById('viewEffMain').innerText = `${calc.kmPerGal.toFixed(1)} Km/Gal`;
-                    document.getElementById('viewEffSub').innerText = `${calc.liters100.toFixed(2)} L/100km · ${sym}${calc.costPerKm.toFixed(3)}/km`;
-                } else {
-                    effBanner.classList.add('hidden');
-                }
-            } else {
-                fuelRow.classList.add('hidden');
-            }
-
-            document.getElementById('viewTxCost').innerText = `${SYMBOLS[r.txCurrency] || '$'} ${r.cost.toFixed(2)} ${r.txCurrency}`;
-            document.getElementById('viewBaseCost').innerText = `${sym} ${r.baseCost.toFixed(2)}`;
-            document.getElementById('viewNotes').innerText = r.notes && r.notes.trim() !== '' ? r.notes : 'Sin observaciones.';
-
-            const photoContainer = document.getElementById('viewPhotoContainer');
-            if (r.photo) {
-                photoContainer.classList.remove('hidden');
-                document.getElementById('viewPhotoImg').src = r.photo;
-            } else {
-                photoContainer.classList.add('hidden');
-            }
-
-            document.getElementById('modalViewMode').classList.remove('hidden');
-            document.getElementById('modalEditForm').classList.add('hidden');
-            document.getElementById('recordModal').classList.remove('hidden');
-
-            if (startInEdit) {
-                switchModalToEdit();
-            } else if (window.lucide) {
-                lucide.createIcons();
-            }
-        }
-
-        function closeRecordModal() {
-            document.getElementById('recordModal').classList.add('hidden');
-            activeModalRecordId = null;
-        }
-
-        function switchModalToEdit() {
-            const r = state.records.find(x => x.id === activeModalRecordId);
-            if (!r) return;
-
-            document.getElementById('modalTitle').innerText = 'Editar Registro';
-            setEditCategory(r.category);
-            document.getElementById('editDateInput').value = r.date;
-            document.getElementById('editOdometerInput').value = r.odometer;
-            document.getElementById('editFuelAmount').value = r.fuelAmount || '';
-            document.getElementById('editFuelUnit').value = r.fuelUnit || state.defaultUnit || 'Gal';
-            document.getElementById('editFuelType').value = r.fuelType || 'Regular';
-            document.getElementById('editFullTankInput').checked = r.fullTank !== false;
-            document.getElementById('editCostInput').value = r.cost;
-            document.getElementById('editTxCurrency').value = r.txCurrency || state.baseCurrency;
-            
-            const savedRate = r.exchangeRate || (r.baseCost > 0 ? (r.cost / r.baseCost) : DEFAULT_RATES[r.txCurrency]);
-            handleEditTxCurrencyChange(savedRate);
-
-            document.getElementById('editStationInput').value = r.station || '';
-            document.getElementById('editInvoiceNumber').value = r.invoice === 'S/N' ? '' : (r.invoice || '');
-            document.getElementById('editNotesInput').value = r.notes || '';
-
-            modalEditPhotoBase64 = r.photo || null;
-            if (modalEditPhotoBase64) {
-                document.getElementById('editPhotoPreviewArea').innerHTML = `
-                    <img src="${modalEditPhotoBase64}" class="h-16 rounded object-cover shadow">
-                    <span class="text-[10px] text-blue-600 font-bold">Tocar para reemplazar foto</span>
-                `;
-            } else {
-                document.getElementById('editPhotoPreviewArea').innerHTML = `
-                    <i data-lucide="camera" class="w-5 h-5 text-slate-400"></i>
-                    <span class="text-[11px] text-slate-500">Tocar para adjuntar foto</span>
-                `;
-            }
-
-            document.getElementById('modalViewMode').classList.add('hidden');
-            document.getElementById('modalEditForm').classList.remove('hidden');
-            if (window.lucide) lucide.createIcons();
-        }
-
-        function cancelEditRecord() {
-            if (activeModalRecordId) {
-                openRecordModal(activeModalRecordId, false);
-            } else {
-                closeRecordModal();
-            }
-        }
-
-        function setEditCategory(cat) {
-            modalEditCategory = cat;
-            const gasBtn = document.getElementById('editCatBtn-gasolina');
-            const tallerBtn = document.getElementById('editCatBtn-taller');
-            const gasFields = document.getElementById('editGasolineFields');
-
-            if (cat === 'gasolina') {
-                gasBtn.className = "py-2 px-3 rounded-lg font-bold text-xs flex items-center justify-center gap-1.5 border-2 border-blue-600 bg-blue-50 text-blue-700";
-                tallerBtn.className = "py-2 px-3 rounded-lg font-bold text-xs flex items-center justify-center gap-1.5 border-2 border-slate-200 bg-white text-slate-600";
-                gasFields.classList.remove('hidden');
-            } else {
-                tallerBtn.className = "py-2 px-3 rounded-lg font-bold text-xs flex items-center justify-center gap-1.5 border-2 border-blue-600 bg-blue-50 text-blue-700";
-                gasBtn.className = "py-2 px-3 rounded-lg font-bold text-xs flex items-center justify-center gap-1.5 border-2 border-slate-200 bg-white text-slate-600";
-                gasFields.classList.add('hidden');
-            }
-        }
-
-        function handleEditTxCurrencyChange(customRate) {
-            const txCurr = document.getElementById('editTxCurrency').value;
-            const container = document.getElementById('editExchangeRateContainer');
-            if (txCurr !== state.baseCurrency) {
-                container.classList.remove('hidden');
-                const rate = customRate || DEFAULT_RATES[txCurr] || 1;
-                document.getElementById('editRateLabel').innerText = `1 ${state.baseCurrency} = ${txCurr}:`;
-                document.getElementById('editExchangeRateInput').value = parseFloat(rate.toFixed(4));
-            } else {
-                container.classList.add('hidden');
-            }
-        }
-
-        function previewEditImage(event) {
-            const file = event.target.files[0];
-            if (file) {
-                const reader = new FileReader();
-                reader.onload = function(e) {
-                    modalEditPhotoBase64 = e.target.result;
-                    document.getElementById('editPhotoPreviewArea').innerHTML = `
-                        <img src="${e.target.result}" class="h-16 rounded object-cover shadow">
-                        <span class="text-[10px] text-emerald-600 font-bold">Nueva foto cargada</span>
-                    `;
-                };
-                reader.readAsDataURL(file);
-            }
-        }
-
-        function saveEditedRecord(e) {
-            e.preventDefault();
-            const idx = state.records.findIndex(x => x.id === activeModalRecordId);
-            if (idx === -1) return;
-
-            const date = document.getElementById('editDateInput').value;
-            const odometer = parseInt(document.getElementById('editOdometerInput').value);
-            const cost = parseFloat(document.getElementById('editCostInput').value);
-            const txCurr = document.getElementById('editTxCurrency').value;
-            let baseCost = cost;
-            let exchangeRate = 1;
-
-            if (txCurr !== state.baseCurrency) {
-                exchangeRate = parseFloat(document.getElementById('editExchangeRateInput').value) || 1;
-                baseCost = cost / exchangeRate;
-            }
-
-            const updated = {
-                ...state.records[idx],
-                category: modalEditCategory,
-                date: date,
-                odometer: odometer,
-                cost: cost,
-                txCurrency: txCurr,
-                exchangeRate: exchangeRate,
-                baseCost: baseCost,
-                station: document.getElementById('editStationInput').value.trim(),
-                invoice: document.getElementById('editInvoiceNumber').value.trim() || 'S/N',
-                notes: document.getElementById('editNotesInput').value.trim(),
-                photo: modalEditPhotoBase64
-            };
-
-            if (modalEditCategory === 'gasolina') {
-                updated.fuelAmount = parseFloat(document.getElementById('editFuelAmount').value) || 0;
-                updated.fuelUnit = document.getElementById('editFuelUnit').value;
-                updated.fuelType = document.getElementById('editFuelType').value;
-                updated.fullTank = document.getElementById('editFullTankInput').checked;
-            } else {
-                delete updated.fuelAmount;
-                delete updated.fuelUnit;
-                delete updated.fuelType;
-                delete updated.fullTank;
-            }
-
-            state.records[idx] = updated;
-
-            const v = state.vehicles.find(x => x.plate === updated.plate);
-            if (v && odometer > v.odometer) v.odometer = odometer;
-
-            saveState();
-            renderHeaderVehicles();
-            renderHistory();
-            renderSummary();
-            openRecordModal(activeModalRecordId, false);
-        }
-
-        function deleteRecordFromModal() {
-            if (!activeModalRecordId) return;
-            if (!confirm('¿Seguro que deseas borrar este registro permanentemente?')) return;
-
-            state.records = state.records.filter(r => r.id !== activeModalRecordId);
-            if (expandedRecordId === activeModalRecordId) expandedRecordId = null;
-            saveState();
-            renderHistory();
-            renderSummary();
-            closeRecordModal();
-        }
-
-        // --- RESUMEN Y MÉTRICAS ---
-
-        function renderSummary() {
-            const sym = SYMBOLS[state.baseCurrency] || '$';
-            const gasRecords = state.records
-                .filter(r => r.plate === state.activeVehiclePlate && r.category === 'gasolina')
-                .sort((a, b) => new Date(a.date) - new Date(b.date) || a.odometer - b.odometer);
-
-            let avgDistance = 0;
-            let avgDays = 0;
-            let totalLitersAfterFirst = 0;
-            let totalFuelCostAfterFirst = 0;
-            let totalKmCalculated = 0;
-            let totalAllFuelAmt = 0;
-            let totalAllFuelCost = 0;
-
-            gasRecords.forEach(r => {
-                const amt = r.fuelAmount || 0;
-                const amtInPrefUnit = state.defaultUnit === 'Gal'
-                    ? (r.fuelUnit === 'Lts' ? amt / 3.78541 : amt)
-                    : (r.fuelUnit === 'Gal' ? amt * 3.78541 : amt);
-                totalAllFuelAmt += amtInPrefUnit;
-                totalAllFuelCost += r.baseCost;
-            });
-
-            if (gasRecords.length >= 2) {
-                let distSum = 0;
-                let daysSum = 0;
-
-                for (let i = 1; i < gasRecords.length; i++) {
-                    const dist = Math.max(0, gasRecords[i].odometer - gasRecords[i - 1].odometer);
-                    distSum += dist;
-
-                    const d1 = new Date(gasRecords[i - 1].date);
-                    const d2 = new Date(gasRecords[i].date);
-                    const diffDays = Math.max(1, Math.round((d2 - d1) / (1000 * 60 * 60 * 24)));
-                    daysSum += diffDays;
-
-                    let liters = gasRecords[i].fuelAmount || 0;
-                    if (gasRecords[i].fuelUnit === 'Gal') liters = liters * 3.78541;
-                    totalLitersAfterFirst += liters;
-                    totalFuelCostAfterFirst += gasRecords[i].baseCost;
-                }
-
-                const intervals = gasRecords.length - 1;
-                avgDistance = Math.round(distSum / intervals);
-                avgDays = (daysSum / intervals).toFixed(1);
-                totalKmCalculated = distSum;
-            }
-
-            let litersPer100 = 0;
-            let kmPerPrefUnit = 0;
-            let costPerKm = 0;
-
-            if (totalKmCalculated > 0 && totalLitersAfterFirst > 0) {
-                litersPer100 = (totalLitersAfterFirst / totalKmCalculated) * 100;
-                const totalPrefUnits = state.defaultUnit === 'Gal' ? (totalLitersAfterFirst / 3.78541) : totalLitersAfterFirst;
-                kmPerPrefUnit = totalKmCalculated / totalPrefUnits;
-                costPerKm = totalFuelCostAfterFirst / totalKmCalculated;
-            }
-
-            const avgPricePerUnit = totalAllFuelAmt > 0 ? (totalAllFuelCost / totalAllFuelAmt) : 0;
-
-            const allRecords = state.records.filter(r => r.plate === state.activeVehiclePlate);
-            const totalCost = allRecords.reduce((sum, r) => sum + r.baseCost, 0);
-
-            document.getElementById('metricKmPerUnit').innerText = `${kmPerPrefUnit.toFixed(1)} Km/${state.defaultUnit}`;
-            document.getElementById('metricLiters100Sub').innerText = `${litersPer100.toFixed(2)} L/100km`;
-            document.getElementById('metricCostPerKm').innerText = `${sym}${costPerKm.toFixed(3)} /Km`;
-            document.getElementById('metricAvgPriceUnit').innerText = `Prom: ${sym}${avgPricePerUnit.toFixed(2)}/${state.defaultUnit}`;
-            document.getElementById('metricAvgDistance').innerText = `${avgDistance} Km`;
-            document.getElementById('metricAvgDaysSub').innerText = `Cada ${avgDays} días`;
-            document.getElementById('metricTotalCost').innerText = `${sym}${totalCost.toFixed(2)}`;
-
-            renderChart(allRecords);
-        }
-
-        function renderChart(records) {
-            const canvas = document.getElementById('expensesChart');
-            if (!canvas || !window.Chart) return;
-            const ctx = canvas.getContext('2d');
-            
-            const gasTotal = records.filter(r => r.category === 'gasolina').reduce((s, r) => s + r.baseCost, 0);
-            const tallerTotal = records.filter(r => r.category === 'taller').reduce((s, r) => s + r.baseCost, 0);
-
-            if (chartInstance) chartInstance.destroy();
-
-            chartInstance = new Chart(ctx, {
-                type: 'doughnut',
-                data: {
-                    labels: ['Gasolina', 'Taller'],
-                    datasets: [{
-                        data: [gasTotal, tallerTotal],
-                        backgroundColor: ['#f59e0b', '#2563eb']
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: {
-                        legend: { position: 'bottom' }
-                    }
-                }
-            });
-        }
-
-        // --- GESTIÓN DE VEHÍCULOS ---
-
-        function renderHeaderVehicles() {
-            const sel = document.getElementById('activeVehicleSelect');
-            if (state.vehicles.length === 0) {
-                sel.innerHTML = `<option value="">Sin vehículos</option>`;
-                return;
-            }
-            sel.innerHTML = state.vehicles.map(v => 
-                `<option value="${v.plate}" ${v.plate === state.activeVehiclePlate ? 'selected' : ''}>${v.plate} · ${v.model} (${v.odometer.toLocaleString()} km)</option>`
-            ).join('');
-        }
-
-        function switchVehicle(plate) {
-            state.activeVehiclePlate = plate;
-            expandedRecordId = null;
-            saveState();
-            renderHistory();
-            renderSummary();
-            renderVehicles();
-        }
-
-        function openNewVehicleForm() {
-            document.getElementById('editingOriginalPlate').value = '';
-            document.getElementById('vehicleFormTitle').innerText = 'Registrar Nuevo Vehículo';
-            document.getElementById('vehicleSaveBtnText').innerText = 'Guardar Vehículo';
-            document.getElementById('deleteVehicleBtn').classList.add('hidden');
-            
-            document.getElementById('vPlate').value = '';
-            document.getElementById('vModel').value = '';
-            document.getElementById('vOdo').value = '';
-            document.getElementById('vTech').value = '';
-            
-            document.getElementById('vehicleFormContainer').classList.remove('hidden');
-            if (window.lucide) lucide.createIcons();
-        }
-
-        function editVehicle(plate) {
-            const v = state.vehicles.find(x => x.plate === plate);
-            if (!v) return;
-
-            document.getElementById('editingOriginalPlate').value = v.plate;
-            document.getElementById('vehicleFormTitle').innerText = `Editar Vehículo (${v.plate})`;
-            document.getElementById('vehicleSaveBtnText').innerText = 'Guardar Cambios';
-            document.getElementById('deleteVehicleBtn').classList.remove('hidden');
-
-            document.getElementById('vPlate').value = v.plate;
-            document.getElementById('vModel').value = v.model || '';
-            document.getElementById('vOdo').value = v.odometer || 0;
-            document.getElementById('vTech').value = v.driver || '';
-
-            document.getElementById('vehicleFormContainer').classList.remove('hidden');
-            document.getElementById('vehicleFormContainer').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-            if (window.lucide) lucide.createIcons();
-        }
-
-        function closeVehicleForm() {
-            document.getElementById('vehicleFormContainer').classList.add('hidden');
-        }
-
-        function saveVehicle() {
-            const originalPlate = document.getElementById('editingOriginalPlate').value.trim();
-            const plate = document.getElementById('vPlate').value.trim().toUpperCase();
-            const model = document.getElementById('vModel').value.trim();
-            const odo = parseInt(document.getElementById('vOdo').value) || 0;
-            const tech = document.getElementById('vTech').value.trim();
-
-            if (!plate) return alert('Por favor ingresa la placa del vehículo.');
-
-            if (originalPlate) {
-                if (plate !== originalPlate && state.vehicles.some(x => x.plate === plate)) {
-                    return alert('Ya existe otro vehículo registrado con esa placa.');
-                }
-                const idx = state.vehicles.findIndex(x => x.plate === originalPlate);
-                if (idx !== -1) {
-                    state.vehicles[idx] = { plate, model, odometer: odo, driver: tech };
-                    if (plate !== originalPlate) {
-                        state.records.forEach(r => {
-                            if (r.plate === originalPlate) r.plate = plate;
-                        });
-                        if (state.activeVehiclePlate === originalPlate) {
-                            state.activeVehiclePlate = plate;
-                        }
-                    }
-                }
-            } else {
-                if (state.vehicles.some(x => x.plate === plate)) {
-                    return alert('Ya existe un vehículo con esa placa.');
-                }
-                state.vehicles.push({ plate, model, odometer: odo, driver: tech });
-                state.activeVehiclePlate = plate;
-            }
-
-            saveState();
-            renderHeaderVehicles();
-            renderVehicles();
-            renderHistory();
-            renderSummary();
-            closeVehicleForm();
-        }
-
-        function deleteVehicle(plate) {
-            const v = state.vehicles.find(x => x.plate === plate);
-            if (!v) return;
-
-            const confirmDelete = confirm('¿Seguro que deseas borrar el vehículo ' + v.plate + ' (' + (v.model || 'Sin modelo') + ')?\n\nNota: También se eliminarán sus registros asociados.');
-            if (!confirmDelete) return;
-
-            state.vehicles = state.vehicles.filter(x => x.plate !== plate);
-            state.records = state.records.filter(r => r.plate !== plate);
-
-            if (state.activeVehiclePlate === plate) {
-                state.activeVehiclePlate = state.vehicles.length > 0 ? state.vehicles[0].plate : '';
-            }
-
-            saveState();
-            renderHeaderVehicles();
-            renderVehicles();
-            renderHistory();
-            renderSummary();
-            closeVehicleForm();
-        }
-
-        function deleteCurrentEditingVehicle() {
-            const originalPlate = document.getElementById('editingOriginalPlate').value.trim();
-            if (originalPlate) {
-                deleteVehicle(originalPlate);
-            }
-        }
-
-        function renderVehicles() {
-            const container = document.getElementById('vehiclesList');
-            if (state.vehicles.length === 0) {
-                container.innerHTML = `<div class="bg-white p-6 rounded-xl text-center text-slate-400 text-xs border border-slate-200">No hay vehículos registrados. Toca "+ Agregar" para crear uno o importa un CSV desde Ajustes.</div>`;
-                return;
-            }
-
-            container.innerHTML = state.vehicles.map(v => {
-                const isActive = v.plate === state.activeVehiclePlate;
-                const recCount = state.records.filter(r => r.plate === v.plate).length;
-                return `
-                <div class="bg-white p-3.5 rounded-xl border ${isActive ? 'border-blue-400 ring-1 ring-blue-100' : 'border-slate-200'} shadow-sm flex items-center justify-between gap-2">
-                    <div onclick="switchVehicle('${v.plate}')" class="flex-1 cursor-pointer">
-                        <div class="flex items-center gap-2">
-                            <span class="font-bold text-sm text-slate-800">${v.plate}</span>
-                            ${isActive ? '<span class="text-[9px] bg-blue-100 text-blue-700 font-bold px-1.5 py-0.5 rounded">Activo</span>' : ''}
-                        </div>
-                        <div class="text-xs text-slate-600 font-medium">${v.model || 'Sin modelo especificado'}</div>
-                        <div class="text-[10px] text-slate-400 mt-0.5">${recCount} reg. • <span class="font-bold text-blue-600">${v.odometer.toLocaleString()} Km</span>${v.driver ? ' • ' + v.driver : ''}</div>
-                    </div>
-                    <div class="flex items-center gap-1.5">
-                        <button onclick="editVehicle('${v.plate}')" title="Editar vehículo" class="p-2 bg-slate-100 hover:bg-blue-50 text-slate-600 hover:text-blue-600 rounded-lg border border-slate-200 transition-colors flex items-center gap-1 text-xs font-semibold">
-                            <i data-lucide="pencil" class="w-3.5 h-3.5"></i>
-                            <span>Editar</span>
-                        </button>
-                        <button onclick="deleteVehicle('${v.plate}')" title="Borrar vehículo" class="p-2 bg-red-50 hover:bg-red-100 text-red-600 rounded-lg border border-red-200 transition-colors">
-                            <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
-                        </button>
-                    </div>
-                </div>
-                `;
-            }).join('');
-
-            if (window.lucide) lucide.createIcons();
-        }
-
-        function exportToCSV() {
-            const vObj = state.vehicles.find(v => v.plate === state.activeVehiclePlate);
-            const modelName = vObj ? vObj.model : state.activeVehiclePlate;
-            const recs = state.records.filter(r => r.plate === state.activeVehiclePlate);
-            let csv = 'ID,Placa,Vehiculo,Fecha,Categoria,Odometro,MontoBase,MonedaTx,Volumen,Unidad,TipoCombustible,TanqueLleno,Estacion,Factura,Notas\n';
-            recs.forEach(r => {
-                csv += `${r.id},${r.plate},"${modelName}",${r.date},${r.category},${r.odometer},${r.baseCost},${r.txCurrency},${r.fuelAmount || 0},${r.fuelUnit || ''},${r.fuelType || 'Regular'},${r.fullTank !== false ? 'Si' : 'No'},"${r.station || ''}",${r.invoice},"${(r.notes || '').replace(/"/g, '""')}"\n`;
-            });
-
-            const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
-            const url = window.URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = `Reporte_${state.activeVehiclePlate}.csv`;
-            a.click();
-        }
-
-        function setupPWA() {
-            window.addEventListener('beforeinstallprompt', (e) => {
-                e.preventDefault();
-                deferredPrompt = e;
-                document.getElementById('pwaInstallBtn').classList.remove('hidden');
-            });
-        }
-
-        function triggerPWAInstall() {
-            if (deferredPrompt) {
-                deferredPrompt.prompt();
-                deferredPrompt.userChoice.then(() => {
-                    deferredPrompt = null;
-                    document.getElementById('pwaInstallBtn').classList.add('hidden');
-                });
-            }
-        }
-
-        function registerServiceWorker() {
-            if ('serviceWorker' in navigator) {
-                navigator.serviceWorker.register('sw.js').catch(() => {});
-            }
-        }
-    </script>
+      };
+      reader.readAsText(file);
+    }
+
+    initApp();
+  </script>
 </body>
 </html>
