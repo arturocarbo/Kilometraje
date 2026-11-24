@@ -37,15 +37,19 @@
       -ms-overflow-style: none;
       scrollbar-width: none;
     }
-    /* Línea de tiempo estilo carretera Drivvo */
-    .road-line {
+    /* Carretera vertical continua centrada en el eje x=22px dentro de un carril de 44px (w-11) */
+    .road-track-line {
+      position: absolute;
+      top: 0;
+      bottom: 0;
+      left: 15px; /* (44px - 14px) / 2 = 15px */
       width: 14px;
       background-color: #334155;
       border-left: 2px solid #94a3b8;
       border-right: 2px solid #94a3b8;
-      position: relative;
+      pointer-events: none;
     }
-    .road-line::after {
+    .road-track-line::after {
       content: '';
       position: absolute;
       top: 0;
@@ -1324,7 +1328,6 @@
     function renderHistory() {
       const container = document.getElementById('historyListContainer');
 
-      // 1. Calcular eficiencia individual por carga de combustible en orden cronológico por vehículo
       const allSortedAsc = [...records]
         .filter(r => selectedVehicle === 'ALL' || r.plate === selectedVehicle)
         .sort((a, b) => a.date.localeCompare(b.date) || (Number(a.odometer) - Number(b.odometer)));
@@ -1349,17 +1352,15 @@
         }
       });
 
-      // 2. Filtrar según pestaña activa (Todos / Gasolina / Servicios)
       const list = allSortedAsc
         .filter(r => currentHistoryFilter === 'all' || r.category === currentHistoryFilter)
-        .reverse(); // Más reciente arriba
+        .reverse();
 
       if (!list.length) {
         container.innerHTML = `<div class="bg-white rounded-2xl p-8 text-center text-slate-400 text-xs card-shadow">No hay registros para mostrar.</div>`;
         return;
       }
 
-      // 3. Agrupar por mes (YYYY-MM) y calcular métricas mensuales + comparativa vs mes anterior
       const monthMap = {};
       list.forEach(r => {
         const ym = r.date.slice(0, 7);
@@ -1367,7 +1368,7 @@
         monthMap[ym].push(r);
       });
 
-      const sortedMonths = Object.keys(monthMap).sort((a, b) => b.localeCompare(a)); // Descendente
+      const sortedMonths = Object.keys(monthMap).sort((a, b) => b.localeCompare(a));
       const monthStats = {};
 
       sortedMonths.forEach(ym => {
@@ -1379,8 +1380,8 @@
         monthStats[ym] = { totalCost, totalDist, avgL100, items };
       });
 
-      // 4. Construir HTML con carretera continua a la izquierda
-      let html = `<div class="relative">`;
+      // Contenedor único relativo con una sola carretera continua a la izquierda (carril 44px -> eje en 22px)
+      let html = `<div class="relative"><div class="road-track-line"></div>`;
 
       sortedMonths.forEach((ym, mIndex) => {
         const stat = monthStats[ym];
@@ -1391,7 +1392,6 @@
         if (stat.avgL100 > 0 && prevStat && prevStat.avgL100 > 0) {
           const prevMonthName = MONTH_NAMES_ES[parseInt(prevYm.split('-')[1], 10) - 1] || prevYm;
           const prevTitle = prevMonthName.charAt(0) + prevMonthName.slice(1).toLowerCase();
-          // Menor L/100km = mejor eficiencia; Mayor L/100km = peor eficiencia
           const diffPct = Math.round(Math.abs(((stat.avgL100 - prevStat.avgL100) / prevStat.avgL100) * 100));
           if (diffPct > 0) {
             const isBetter = stat.avgL100 < prevStat.avgL100;
@@ -1403,23 +1403,18 @@
         if (stat.totalDist > 0) metricsParts.push(`${stat.totalDist.toLocaleString()} km`);
         if (stat.avgL100 > 0) metricsParts.push(`${stat.avgL100.toFixed(2)} L/100km`);
 
-        // Tarjeta resumen mensual
+        // Tarjeta resumen mensual (sin alterar el carril izquierdo de 44px)
         html += `
-          <div class="flex items-stretch">
-            <div class="w-11 shrink-0 flex justify-center relative">
-              <div class="road-line h-full"></div>
-            </div>
-            <div class="flex-1 py-2">
-              <div class="bg-slate-100/90 border border-slate-200/80 rounded-2xl px-4 py-3">
-                <p class="text-[11px] font-bold tracking-wider text-slate-400 uppercase">${formatMonthTitleEs(ym)}</p>
-                <p class="text-xs font-extrabold text-slate-700 mt-1">${metricsParts.join(' · ')}</p>
-                ${compLine}
-              </div>
+          <div class="relative flex items-center pl-11 py-2">
+            <div class="flex-1 bg-slate-100/95 border border-slate-200/80 rounded-2xl px-4 py-3 z-10">
+              <p class="text-[11px] font-bold tracking-wider text-slate-400 uppercase">${formatMonthTitleEs(ym)}</p>
+              <p class="text-xs font-extrabold text-slate-700 mt-1">${metricsParts.join(' · ')}</p>
+              ${compLine}
             </div>
           </div>
         `;
 
-        // Eventos del mes
+        // Eventos del mes con ícono centrado exactamente en left: 4px (w-9 = 36px -> 4 + 18 = 22px, centro exacto de la carretera)
         stat.items.forEach(r => {
           const isFuel = r.category === 'gasolina';
           const circleBg = isFuel ? 'bg-amber-500' : 'bg-stone-600';
@@ -1432,14 +1427,11 @@
           if (selectedVehicle === 'ALL') subParts.push(r.plate);
 
           html += `
-            <div onclick="openDetailModal('${r.id}')" class="flex items-stretch cursor-pointer active:bg-slate-100/70 rounded-xl transition">
-              <div class="w-11 shrink-0 flex justify-center items-center relative">
-                <div class="road-line h-full"></div>
-                <div class="w-9 h-9 rounded-full ${circleBg} text-white flex items-center justify-center shadow-sm z-10 border-2 border-white">
-                  <i class="fa-solid ${iconClass} text-sm"></i>
-                </div>
+            <div onclick="openDetailModal('${r.id}')" class="relative flex items-center pl-11 py-3 pr-1 border-b border-slate-100 cursor-pointer active:bg-slate-100/70 transition">
+              <div class="w-9 h-9 rounded-full ${circleBg} text-white flex items-center justify-center shadow-sm z-10 border-2 border-white absolute left-1 top-1/2 -translate-y-1/2">
+                <i class="fa-solid ${iconClass} text-sm"></i>
               </div>
-              <div class="flex-1 py-3 pr-1 border-b border-slate-100 flex items-center justify-between gap-2 min-w-0">
+              <div class="flex-1 flex items-center justify-between gap-2 min-w-0">
                 <div class="min-w-0">
                   <p class="text-sm font-bold text-slate-800 truncate">
                     ${titleText}
@@ -1478,13 +1470,13 @@
         <div><span class="text-slate-400 block text-[10px]">Monto Total</span><strong class="text-sm text-slate-800">$${Number(r.amount).toFixed(2)}</strong></div>
         <div><span class="text-slate-400 block text-[10px]">Odómetro</span><strong class="text-sm text-slate-800">${Number(r.odometer).toLocaleString()} km</strong></div>
         ${isFuel ? `
-          <div><span class="text-slate-400 block text-[10px]">Volumen</span><strong class="text-slate-800">${Number(r.volume).toFixed(2)} gal</strong></div>
-          <div><span class="text-slate-400 block text-[10px]">Precio / Galón</span><strong class="text-slate-800">${ppg}</strong></div>
+          <div><span class="text-slate-400 block text-[10px]">Volumen</span><strong class="text-sm text-slate-800">${Number(r.volume).toFixed(2)} gal</strong></div>
+          <div><span class="text-slate-400 block text-[10px]">Precio / Galón</span><strong class="text-sm text-slate-800">${ppg}</strong></div>
         ` : `
-          <div><span class="text-slate-400 block text-[10px]">Proveedor / Taller</span><strong class="text-slate-800">${r.provider || '—'}</strong></div>
-          <div><span class="text-slate-400 block text-[10px]">Registrado por</span><strong class="text-slate-800">${r.author || '—'}</strong></div>
+          <div><span class="text-slate-400 block text-[10px]">Proveedor / Taller</span><strong class="text-sm text-slate-800">${r.provider || '—'}</strong></div>
+          <div><span class="text-slate-400 block text-[10px]">Registrado por</span><strong class="text-sm text-slate-800">${r.author || '—'}</strong></div>
         `}
-        ${isFuel ? `<div><span class="text-slate-400 block text-[10px]">Registrado por</span><strong class="text-slate-800">${r.author || '—'}</strong></div>` : ''}
+        ${isFuel ? `<div><span class="text-slate-400 block text-[10px]">Registrado por</span><strong class="text-sm text-slate-800">${r.author || '—'}</strong></div>` : ''}
       `;
 
       const notesEl = document.getElementById('detNotes');
@@ -1752,7 +1744,7 @@
     };
 
     window.downloadBackupJSON = function() {
-      const payload = { version: 12, exportedAt: new Date().toISOString(), vehicles, records };
+      const payload = { version: 13, exportedAt: new Date().toISOString(), vehicles, records };
       const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
       const a = document.createElement('a');
       a.href = URL.createObjectURL(blob);
