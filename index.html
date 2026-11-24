@@ -15,7 +15,7 @@
     @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
     body {
       font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
-      background-color: #f1f5f9;
+      background-color: #f8fafc;
       -webkit-tap-highlight-color: transparent;
       overscroll-behavior-y: none;
     }
@@ -36,6 +36,30 @@
     .no-scrollbar {
       -ms-overflow-style: none;
       scrollbar-width: none;
+    }
+    /* Línea de tiempo estilo carretera Drivvo */
+    .road-line {
+      width: 14px;
+      background-color: #334155;
+      border-left: 2px solid #94a3b8;
+      border-right: 2px solid #94a3b8;
+      position: relative;
+    }
+    .road-line::after {
+      content: '';
+      position: absolute;
+      top: 0;
+      bottom: 0;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 2px;
+      background-image: repeating-linear-gradient(
+        to bottom,
+        #f8fafc 0px,
+        #f8fafc 7px,
+        transparent 7px,
+        transparent 14px
+      );
     }
     @keyframes fadeIn {
       from { opacity: 0; transform: translateY(6px); }
@@ -116,7 +140,7 @@
       </div>
     </div>
 
-    <!-- SUB-TABS ESTILO DRIVVO -->
+    <!-- SUB-TABS ESTILO DRIVVO (SOLO EN REPORTES) -->
     <div id="reportSubTabs" class="bg-white text-slate-500 border-b border-slate-200">
       <div class="max-w-lg mx-auto grid grid-cols-3 text-center text-xs tracking-wider uppercase">
         <button type="button" id="subtab-general" onclick="switchReportSubTab('general')"
@@ -445,9 +469,9 @@
       </div>
     </section>
 
-    <!-- ==================== VISTA: HISTORIAL ==================== -->
-    <section id="view-history" class="hidden space-y-3 animate-fade">
-      <div class="flex items-center justify-between gap-2">
+    <!-- ==================== VISTA: HISTORIAL (ESTILO LÍNEA DE TIEMPO DRIVVO) ==================== -->
+    <section id="view-history" class="hidden space-y-2.5 animate-fade">
+      <div class="flex items-center justify-between gap-2 pb-1">
         <div class="flex gap-1.5 overflow-x-auto no-scrollbar py-1">
           <button type="button" onclick="setHistoryFilter('all')" id="hfilter-all" class="px-3 py-1.5 rounded-full text-xs font-bold bg-teal-700 text-white">Todos</button>
           <button type="button" onclick="setHistoryFilter('gasolina')" id="hfilter-gasolina" class="px-3 py-1.5 rounded-full text-xs font-semibold bg-white text-slate-600 border border-slate-200">Gasolina</button>
@@ -458,7 +482,7 @@
         </button>
       </div>
 
-      <div id="historyListContainer" class="space-y-2.5"></div>
+      <div id="historyListContainer" class="pb-4"></div>
     </section>
 
     <!-- ==================== VISTA: VEHÍCULOS ==================== -->
@@ -501,7 +525,39 @@
     </div>
   </nav>
 
-  <!-- ==================== MODAL: NUEVO / EDITAR REGISTRO ==================== -->
+  <!-- ==================== MODAL: DETALLE DEL REGISTRO ==================== -->
+  <div id="detailModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-xs z-50 hidden flex items-end sm:items-center justify-center">
+    <div class="bg-white w-full max-w-md rounded-t-3xl sm:rounded-3xl p-5 space-y-4 animate-fade">
+      <div class="flex items-center justify-between border-b border-slate-100 pb-3">
+        <div class="flex items-center gap-2.5">
+          <div id="detIconBox" class="w-9 h-9 rounded-full bg-amber-500 text-white flex items-center justify-center">
+            <i id="detIcon" class="fa-solid fa-gas-pump"></i>
+          </div>
+          <div>
+            <h3 id="detTitle" class="text-base font-extrabold text-slate-800">Gasolina</h3>
+            <p id="detSub" class="text-xs text-slate-400">Vehículo · Fecha</p>
+          </div>
+        </div>
+        <button type="button" onclick="closeDetailModal()" class="w-8 h-8 rounded-full bg-slate-100 text-slate-500 flex items-center justify-center">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+      </div>
+
+      <div id="detGrid" class="grid grid-cols-2 gap-3 bg-slate-50 p-3.5 rounded-2xl text-xs"></div>
+      <p id="detNotes" class="hidden text-xs text-slate-600 bg-amber-50/60 p-3 rounded-xl border border-amber-100"></p>
+
+      <div class="flex items-center justify-end gap-2 pt-1">
+        <button type="button" id="detDeleteBtn" class="px-4 py-2.5 rounded-xl bg-rose-50 text-rose-600 text-xs font-bold hover:bg-rose-100">
+          <i class="fa-solid fa-trash mr-1"></i>Eliminar
+        </button>
+        <button type="button" onclick="closeDetailModal()" class="px-4 py-2.5 rounded-xl bg-slate-800 text-white text-xs font-bold">
+          Cerrar
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==================== MODAL: NUEVO REGISTRO ==================== -->
   <div id="recordModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-xs z-50 hidden flex items-end sm:items-center justify-center">
     <div class="bg-white w-full max-w-lg rounded-t-3xl sm:rounded-3xl p-5 max-h-[92vh] overflow-y-auto space-y-4 animate-fade">
       <div class="flex items-center justify-between border-b border-slate-100 pb-3">
@@ -662,7 +718,6 @@
         </button>
       </div>
 
-      <!-- Estado de Sesión Nube -->
       <div class="bg-emerald-50 border border-emerald-200 rounded-2xl p-4 flex items-center justify-between gap-2">
         <div class="min-w-0">
           <p class="text-xs font-extrabold text-emerald-900"><i class="fa-solid fa-cloud-check mr-1.5"></i>Nube Activa en Tiempo Real</p>
@@ -673,7 +728,6 @@
         </button>
       </div>
 
-      <!-- Importar CSV -->
       <div class="bg-teal-50/70 border border-teal-100 rounded-2xl p-4 space-y-2.5">
         <h4 class="text-sm font-bold text-teal-900"><i class="fa-solid fa-file-csv mr-1.5"></i>Importar Historial (CSV)</h4>
         <p class="text-xs text-teal-800">Sube tu archivo CSV y se sincronizará automáticamente con todos los celulares conectados a esta flota.</p>
@@ -687,7 +741,6 @@
           class="block w-full text-xs text-slate-600 file:mr-3 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-bold file:bg-teal-700 file:text-white hover:file:bg-teal-800 cursor-pointer" />
       </div>
 
-      <!-- Backup JSON -->
       <div class="bg-slate-50 border border-slate-200 rounded-2xl p-4 space-y-2.5">
         <h4 class="text-sm font-bold text-slate-800"><i class="fa-solid fa-database mr-1.5"></i>Copia de Seguridad (JSON)</h4>
         <div class="grid grid-cols-2 gap-2.5">
@@ -1235,7 +1288,7 @@
       });
     }
 
-    // ==================== HISTORIAL Y VEHÍCULOS ====================
+    // ==================== HISTORIAL EN FORMATO CARRETERA DRIVVO ====================
     window.setHistoryFilter = function(f) {
       currentHistoryFilter = f;
       ['all', 'gasolina', 'mantenimiento'].forEach(k => {
@@ -1249,48 +1302,212 @@
       renderHistory();
     };
 
+    const MONTH_NAMES_ES = [
+      'ENERO', 'FEBRERO', 'MARZO', 'ABRIL', 'MAYO', 'JUNIO',
+      'JULIO', 'AGOSTO', 'SEPTIEMBRE', 'OCTUBRE', 'NOVIEMBRE', 'DICIEMBRE'
+    ];
+    const MONTH_SHORT_ES = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'];
+
+    function formatShortDateEs(dateStr) {
+      if (!dateStr || dateStr.length < 10) return dateStr || '';
+      const parts = dateStr.split('-');
+      const mIdx = parseInt(parts[1], 10) - 1;
+      return `${parts[2]} ${MONTH_SHORT_ES[mIdx] || parts[1]}`;
+    }
+
+    function formatMonthTitleEs(ym) {
+      const [y, m] = ym.split('-');
+      const mIdx = parseInt(m, 10) - 1;
+      return `${MONTH_NAMES_ES[mIdx] || m} ${y}`;
+    }
+
     function renderHistory() {
       const container = document.getElementById('historyListContainer');
-      const list = records
-        .filter(r => (selectedVehicle === 'ALL' || r.plate === selectedVehicle))
+
+      // 1. Calcular eficiencia individual por carga de combustible en orden cronológico por vehículo
+      const allSortedAsc = [...records]
+        .filter(r => selectedVehicle === 'ALL' || r.plate === selectedVehicle)
+        .sort((a, b) => a.date.localeCompare(b.date) || (Number(a.odometer) - Number(b.odometer)));
+
+      const effById = {};
+      const distById = {};
+      const lastFuelByPlate = {};
+
+      allSortedAsc.forEach(r => {
+        if (r.category === 'gasolina') {
+          const prev = lastFuelByPlate[r.plate];
+          if (prev && Number(r.odometer) > Number(prev.odometer) && Number(r.volume) > 0) {
+            const dKm = Number(r.odometer) - Number(prev.odometer);
+            const liters = Number(r.volume) * 3.78541;
+            const l100 = (liters / dKm) * 100;
+            if (l100 > 1.5 && l100 < 40) {
+              effById[r.id] = l100;
+              distById[r.id] = dKm;
+            }
+          }
+          lastFuelByPlate[r.plate] = r;
+        }
+      });
+
+      // 2. Filtrar según pestaña activa (Todos / Gasolina / Servicios)
+      const list = allSortedAsc
         .filter(r => currentHistoryFilter === 'all' || r.category === currentHistoryFilter)
-        .sort((a, b) => b.date.localeCompare(a.date) || (Number(b.odometer) - Number(a.odometer)));
+        .reverse(); // Más reciente arriba
 
       if (!list.length) {
         container.innerHTML = `<div class="bg-white rounded-2xl p-8 text-center text-slate-400 text-xs card-shadow">No hay registros para mostrar.</div>`;
         return;
       }
 
-      container.innerHTML = list.map(r => {
-        const isFuel = r.category === 'gasolina';
-        const priceGal = (isFuel && Number(r.volume) > 0) ? `$${(Number(r.amount) / Number(r.volume)).toFixed(2)}/gal` : '';
-        const authorBadge = r.author ? ` · <span class="text-teal-700 font-semibold">${r.author}</span>` : '';
-        return `
-          <div class="bg-white rounded-2xl p-3.5 card-shadow border border-slate-100 flex items-center justify-between gap-3">
-            <div class="flex items-center gap-3 min-w-0">
-              <div class="w-10 h-10 rounded-xl ${isFuel ? 'bg-amber-100 text-amber-600' : 'bg-stone-100 text-stone-700'} flex items-center justify-center shrink-0">
-                <i class="fa-solid ${isFuel ? 'fa-gas-pump' : 'fa-wrench'}"></i>
-              </div>
-              <div class="min-w-0">
-                <p class="text-xs font-bold text-slate-800 truncate">
-                  ${isFuel ? `Combustible (${Number(r.volume).toFixed(2)} gal)` : (r.serviceType || 'Servicio')}
-                </p>
-                <p class="text-[11px] text-slate-400 truncate">
-                  ${r.date} · ${Number(r.odometer).toLocaleString()} km · <span class="font-semibold text-slate-500">${r.plate}</span>${authorBadge}
-                </p>
-                ${r.notes ? `<p class="text-[11px] text-slate-400 italic truncate">${r.notes}</p>` : ''}
-              </div>
+      // 3. Agrupar por mes (YYYY-MM) y calcular métricas mensuales + comparativa vs mes anterior
+      const monthMap = {};
+      list.forEach(r => {
+        const ym = r.date.slice(0, 7);
+        if (!monthMap[ym]) monthMap[ym] = [];
+        monthMap[ym].push(r);
+      });
+
+      const sortedMonths = Object.keys(monthMap).sort((a, b) => b.localeCompare(a)); // Descendente
+      const monthStats = {};
+
+      sortedMonths.forEach(ym => {
+        const items = monthMap[ym];
+        const totalCost = items.reduce((s, r) => s + (Number(r.amount) || 0), 0);
+        const totalDist = items.reduce((s, r) => s + (distById[r.id] || 0), 0);
+        const effs = items.map(r => effById[r.id]).filter(v => v > 0);
+        const avgL100 = effs.length ? (effs.reduce((a, b) => a + b, 0) / effs.length) : 0;
+        monthStats[ym] = { totalCost, totalDist, avgL100, items };
+      });
+
+      // 4. Construir HTML con carretera continua a la izquierda
+      let html = `<div class="relative">`;
+
+      sortedMonths.forEach((ym, mIndex) => {
+        const stat = monthStats[ym];
+        const prevYm = sortedMonths[mIndex + 1];
+        const prevStat = prevYm ? monthStats[prevYm] : null;
+
+        let compLine = '';
+        if (stat.avgL100 > 0 && prevStat && prevStat.avgL100 > 0) {
+          const prevMonthName = MONTH_NAMES_ES[parseInt(prevYm.split('-')[1], 10) - 1] || prevYm;
+          const prevTitle = prevMonthName.charAt(0) + prevMonthName.slice(1).toLowerCase();
+          // Menor L/100km = mejor eficiencia; Mayor L/100km = peor eficiencia
+          const diffPct = Math.round(Math.abs(((stat.avgL100 - prevStat.avgL100) / prevStat.avgL100) * 100));
+          if (diffPct > 0) {
+            const isBetter = stat.avgL100 < prevStat.avgL100;
+            compLine = `<p class="text-[11px] text-slate-500 mt-1">Eficiencia <strong class="${isBetter ? 'text-emerald-600' : 'text-amber-600'}">${diffPct}%</strong> ${isBetter ? 'mejor que' : 'por debajo de'} ${prevTitle}</p>`;
+          }
+        }
+
+        const metricsParts = [`$${stat.totalCost.toFixed(2)}`];
+        if (stat.totalDist > 0) metricsParts.push(`${stat.totalDist.toLocaleString()} km`);
+        if (stat.avgL100 > 0) metricsParts.push(`${stat.avgL100.toFixed(2)} L/100km`);
+
+        // Tarjeta resumen mensual
+        html += `
+          <div class="flex items-stretch">
+            <div class="w-11 shrink-0 flex justify-center relative">
+              <div class="road-line h-full"></div>
             </div>
-            <div class="text-right shrink-0">
-              <p class="text-sm font-extrabold ${isFuel ? 'text-amber-600' : 'text-stone-700'}">$${Number(r.amount).toFixed(2)}</p>
-              ${priceGal ? `<p class="text-[10px] text-slate-400">${priceGal}</p>` : ''}
-              <button type="button" onclick="deleteRecord('${r.id}')" class="text-[10px] text-rose-400 hover:text-rose-600 mt-0.5">Eliminar</button>
+            <div class="flex-1 py-2">
+              <div class="bg-slate-100/90 border border-slate-200/80 rounded-2xl px-4 py-3">
+                <p class="text-[11px] font-bold tracking-wider text-slate-400 uppercase">${formatMonthTitleEs(ym)}</p>
+                <p class="text-xs font-extrabold text-slate-700 mt-1">${metricsParts.join(' · ')}</p>
+                ${compLine}
+              </div>
             </div>
           </div>
         `;
-      }).join('');
+
+        // Eventos del mes
+        stat.items.forEach(r => {
+          const isFuel = r.category === 'gasolina';
+          const circleBg = isFuel ? 'bg-amber-500' : 'bg-stone-600';
+          const iconClass = isFuel ? 'fa-gas-pump' : 'fa-wrench';
+          const titleText = isFuel ? 'Gasolina' : (r.serviceType || 'Servicio');
+
+          const subParts = [`${Number(r.odometer).toLocaleString()} km`];
+          if (isFuel && effById[r.id]) subParts.push(`${effById[r.id].toFixed(2)} L/100km`);
+          if (isFuel && Number(r.volume) > 0) subParts.push(`${Number(r.volume).toFixed(2)} gal`);
+          if (selectedVehicle === 'ALL') subParts.push(r.plate);
+
+          html += `
+            <div onclick="openDetailModal('${r.id}')" class="flex items-stretch cursor-pointer active:bg-slate-100/70 rounded-xl transition">
+              <div class="w-11 shrink-0 flex justify-center items-center relative">
+                <div class="road-line h-full"></div>
+                <div class="w-9 h-9 rounded-full ${circleBg} text-white flex items-center justify-center shadow-sm z-10 border-2 border-white">
+                  <i class="fa-solid ${iconClass} text-sm"></i>
+                </div>
+              </div>
+              <div class="flex-1 py-3 pr-1 border-b border-slate-100 flex items-center justify-between gap-2 min-w-0">
+                <div class="min-w-0">
+                  <p class="text-sm font-bold text-slate-800 truncate">
+                    ${titleText}
+                    ${r.author ? `<span class="text-[10px] font-semibold text-teal-700 bg-teal-50 px-1.5 py-0.5 rounded ml-1">${r.author}</span>` : ''}
+                  </p>
+                  <p class="text-xs text-slate-500 mt-0.5 truncate">${subParts.join(' · ')}</p>
+                </div>
+                <div class="text-right shrink-0">
+                  <p class="text-sm font-extrabold text-slate-800">$${Number(r.amount).toFixed(2)}</p>
+                  <p class="text-[11px] text-slate-400 mt-0.5">${formatShortDateEs(r.date)}</p>
+                </div>
+              </div>
+            </div>
+          `;
+        });
+      });
+
+      html += `</div>`;
+      container.innerHTML = html;
     }
 
+    window.openDetailModal = function(id) {
+      const r = records.find(x => String(x.id) === String(id));
+      if (!r) return;
+      const isFuel = r.category === 'gasolina';
+      const iconBox = document.getElementById('detIconBox');
+      const icon = document.getElementById('detIcon');
+
+      iconBox.className = `w-9 h-9 rounded-full ${isFuel ? 'bg-amber-500' : 'bg-stone-600'} text-white flex items-center justify-center`;
+      icon.className = `fa-solid ${isFuel ? 'fa-gas-pump' : 'fa-wrench'}`;
+      document.getElementById('detTitle').textContent = isFuel ? 'Carga de Combustible' : (r.serviceType || 'Servicio');
+      document.getElementById('detSub').textContent = `${r.plate} · ${r.date}`;
+
+      const ppg = (isFuel && Number(r.volume) > 0) ? `$${(Number(r.amount) / Number(r.volume)).toFixed(3)} / gal` : '—';
+      document.getElementById('detGrid').innerHTML = `
+        <div><span class="text-slate-400 block text-[10px]">Monto Total</span><strong class="text-sm text-slate-800">$${Number(r.amount).toFixed(2)}</strong></div>
+        <div><span class="text-slate-400 block text-[10px]">Odómetro</span><strong class="text-sm text-slate-800">${Number(r.odometer).toLocaleString()} km</strong></div>
+        ${isFuel ? `
+          <div><span class="text-slate-400 block text-[10px]">Volumen</span><strong class="text-slate-800">${Number(r.volume).toFixed(2)} gal</strong></div>
+          <div><span class="text-slate-400 block text-[10px]">Precio / Galón</span><strong class="text-slate-800">${ppg}</strong></div>
+        ` : `
+          <div><span class="text-slate-400 block text-[10px]">Proveedor / Taller</span><strong class="text-slate-800">${r.provider || '—'}</strong></div>
+          <div><span class="text-slate-400 block text-[10px]">Registrado por</span><strong class="text-slate-800">${r.author || '—'}</strong></div>
+        `}
+        ${isFuel ? `<div><span class="text-slate-400 block text-[10px]">Registrado por</span><strong class="text-slate-800">${r.author || '—'}</strong></div>` : ''}
+      `;
+
+      const notesEl = document.getElementById('detNotes');
+      if (r.notes) {
+        notesEl.textContent = `Notas: ${r.notes}`;
+        notesEl.classList.remove('hidden');
+      } else {
+        notesEl.classList.add('hidden');
+      }
+
+      document.getElementById('detDeleteBtn').onclick = () => {
+        closeDetailModal();
+        deleteRecord(r.id);
+      };
+
+      document.getElementById('detailModal').classList.remove('hidden');
+    };
+
+    window.closeDetailModal = function() {
+      document.getElementById('detailModal').classList.add('hidden');
+    };
+
+    // ==================== VEHÍCULOS ====================
     function renderVehicles() {
       const container = document.getElementById('vehiclesListContainer');
       container.innerHTML = vehicles.map(v => {
@@ -1535,7 +1752,7 @@
     };
 
     window.downloadBackupJSON = function() {
-      const payload = { version: 11, exportedAt: new Date().toISOString(), vehicles, records };
+      const payload = { version: 12, exportedAt: new Date().toISOString(), vehicles, records };
       const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
       const a = document.createElement('a');
       a.href = URL.createObjectURL(blob);
