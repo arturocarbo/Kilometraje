@@ -37,12 +37,11 @@
       -ms-overflow-style: none;
       scrollbar-width: none;
     }
-    /* Carretera vertical continua centrada en el eje x=22px dentro de un carril de 44px (w-11) */
     .road-track-line {
       position: absolute;
       top: 0;
       bottom: 0;
-      left: 15px; /* (44px - 14px) / 2 = 15px */
+      left: 15px;
       width: 14px;
       background-color: #334155;
       border-left: 2px solid #94a3b8;
@@ -234,8 +233,8 @@
                 <span id="gen-cost-day" class="font-bold text-slate-700">$0.00</span>
               </div>
               <div class="text-right">
-                <span class="block text-[10px] text-slate-400">Por km</span>
-                <span id="gen-cost-km" class="font-bold text-slate-700">$0.00</span>
+                <span id="gen-cost-unit-lbl" class="block text-[10px] text-slate-400">Por km</span>
+                <span id="gen-cost-unit" class="font-bold text-slate-700">$0.00</span>
               </div>
             </div>
           </div>
@@ -250,7 +249,7 @@
             <div>
               <p class="text-[11px] text-slate-400 font-medium">Recorrido</p>
               <p class="text-xl font-extrabold text-slate-700 tracking-tight mt-0.5">
-                <span id="gen-total-dist">0</span> <span class="text-xs font-semibold text-slate-400">km</span>
+                <span id="gen-total-dist">0</span> <span id="gen-dist-unit" class="text-xs font-semibold text-slate-400">km</span>
               </p>
             </div>
             <div class="pt-2.5 mt-2.5 border-t border-slate-100 text-xs">
@@ -276,8 +275,8 @@
                 <span id="gen-fuel-day" class="font-bold text-slate-700">$0.00</span>
               </div>
               <div class="text-right">
-                <span class="block text-[10px] text-slate-400">Por km</span>
-                <span id="gen-fuel-km" class="font-bold text-slate-700">$0.00</span>
+                <span id="gen-fuel-unit-lbl" class="block text-[10px] text-slate-400">Por km</span>
+                <span id="gen-fuel-unit" class="font-bold text-slate-700">$0.00</span>
               </div>
             </div>
           </div>
@@ -299,8 +298,8 @@
                 <span id="gen-srv-day" class="font-bold text-slate-700">$0.00</span>
               </div>
               <div class="text-right">
-                <span class="block text-[10px] text-slate-400">Por km</span>
-                <span id="gen-srv-km" class="font-bold text-slate-700">$0.00</span>
+                <span id="gen-srv-unit-lbl" class="block text-[10px] text-slate-400">Por km</span>
+                <span id="gen-srv-unit" class="font-bold text-slate-700">$0.00</span>
               </div>
             </div>
           </div>
@@ -336,8 +335,8 @@
                 <span id="ref-cost-day" class="font-bold text-slate-700">$0.00</span>
               </div>
               <div class="text-right">
-                <span class="block text-[10px] text-slate-400">Por km</span>
-                <span id="ref-cost-km" class="font-bold text-slate-700">$0.00</span>
+                <span id="ref-cost-unit-lbl" class="block text-[10px] text-slate-400">Por km</span>
+                <span id="ref-cost-unit" class="font-bold text-slate-700">$0.00</span>
               </div>
             </div>
           </div>
@@ -402,7 +401,7 @@
               <p class="text-xl font-extrabold text-amber-600 tracking-tight mt-0.5">
                 <span id="ref-avg-eff">0.00</span> <span class="text-[11px] font-semibold">L/100km</span>
               </p>
-              <p id="ref-avg-kmgal" class="text-[11px] text-slate-400 font-medium mt-0.5">0.0 km/gal</p>
+              <p id="ref-avg-distgal" class="text-[11px] text-slate-400 font-medium mt-0.5">0.0 km/gal</p>
             </div>
             <div class="grid grid-cols-2 gap-1 pt-2 mt-2 border-t border-slate-100 text-[11px]">
               <div>
@@ -447,8 +446,8 @@
               <span id="srv-cost-day" class="font-bold text-slate-700">$0.00</span>
             </div>
             <div>
-              <span class="block text-[10px] text-slate-400">Por km</span>
-              <span id="srv-cost-km" class="font-bold text-slate-700">$0.00</span>
+              <span id="srv-cost-unit-lbl" class="block text-[10px] text-slate-400">Por km</span>
+              <span id="srv-cost-unit" class="font-bold text-slate-700">$0.00</span>
             </div>
             <div class="text-right">
               <span class="block text-[10px] text-slate-400">Prom. / visita</span>
@@ -589,7 +588,7 @@
         <div class="grid grid-cols-2 gap-3">
           <div>
             <label class="block text-xs font-semibold text-slate-600 mb-1">Vehículo</label>
-            <select id="recVehicle" required class="w-full text-sm border border-slate-200 rounded-xl px-3 py-2.5 bg-white"></select>
+            <select id="recVehicle" required onchange="updateRecordUnitLabel()" class="w-full text-sm border border-slate-200 rounded-xl px-3 py-2.5 bg-white"></select>
           </div>
           <div>
             <label class="block text-xs font-semibold text-slate-600 mb-1">Fecha</label>
@@ -599,7 +598,7 @@
 
         <div class="grid grid-cols-2 gap-3">
           <div>
-            <label class="block text-xs font-semibold text-slate-600 mb-1">Odómetro (km)</label>
+            <label id="recOdoLabel" class="block text-xs font-semibold text-slate-600 mb-1">Odómetro (km)</label>
             <input type="number" step="1" id="recOdometer" required placeholder="Ej: 17850"
               class="w-full text-sm border border-slate-200 rounded-xl px-3 py-2.5 font-semibold" />
           </div>
@@ -640,7 +639,7 @@
             <label class="block text-xs font-semibold text-stone-700 mb-1">Tipo de Servicio / Mantenimiento</label>
             <select id="recServiceType" class="w-full text-sm border border-stone-200 rounded-xl px-3 py-2 bg-white">
               <option value="Cambio de Aceite y Filtro">Cambio de Aceite y Filtro</option>
-              <option value="Mantenimiento Preventivo">Mantenimiento Preventivo (Km)</option>
+              <option value="Mantenimiento Preventivo">Mantenimiento Preventivo (Km / Mi)</option>
               <option value="Frenos / Pastillas">Frenos / Pastillas</option>
               <option value="Llantas / Alineación">Llantas / Alineación y Balanceo</option>
               <option value="Batería / Eléctrico">Batería / Sistema Eléctrico</option>
@@ -700,10 +699,19 @@
           <input type="text" id="vehName" required placeholder="Ej: Hyundai Creta Grand 2024"
             class="w-full text-sm border border-slate-200 rounded-xl px-3 py-2.5" />
         </div>
-        <div>
-          <label class="block text-xs font-semibold text-slate-600 mb-1">Odómetro Actual (km)</label>
-          <input type="number" id="vehOdo" required placeholder="0"
-            class="w-full text-sm border border-slate-200 rounded-xl px-3 py-2.5" />
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block text-xs font-semibold text-slate-600 mb-1">Tipo de Medición</label>
+            <select id="vehUnit" onchange="updateVehOdoPlaceholder()" class="w-full text-sm border border-slate-200 rounded-xl px-3 py-2.5 bg-white font-semibold">
+              <option value="km">Kilometraje (km)</option>
+              <option value="mi">Millaje (mi)</option>
+            </select>
+          </div>
+          <div>
+            <label id="vehOdoLabel" class="block text-xs font-semibold text-slate-600 mb-1">Odómetro Actual (km)</label>
+            <input type="number" id="vehOdo" required placeholder="0"
+              class="w-full text-sm border border-slate-200 rounded-xl px-3 py-2.5" />
+          </div>
         </div>
         <button type="submit" class="w-full bg-teal-700 text-white font-bold py-3 rounded-2xl shadow-sm">
           Guardar Vehículo
@@ -735,11 +743,20 @@
       <div class="bg-teal-50/70 border border-teal-100 rounded-2xl p-4 space-y-2.5">
         <h4 class="text-sm font-bold text-teal-900"><i class="fa-solid fa-file-csv mr-1.5"></i>Importar Historial (CSV)</h4>
         <p class="text-xs text-teal-800">Sube tu archivo CSV y se sincronizará automáticamente con todos los celulares conectados a esta flota.</p>
-        <div class="space-y-2">
-          <label class="block text-[11px] font-semibold text-teal-900">Asignar a vehículo (opcional, si el CSV no trae Placa):</label>
-          <select id="importTargetVehicle" class="w-full text-xs border border-teal-200 rounded-xl px-3 py-2 bg-white">
-            <option value="AUTO">Detectar automáticamente desde el CSV</option>
-          </select>
+        <div class="grid grid-cols-2 gap-2">
+          <div>
+            <label class="block text-[11px] font-semibold text-teal-900 mb-1">Vehículo destino:</label>
+            <select id="importTargetVehicle" class="w-full text-xs border border-teal-200 rounded-xl px-2.5 py-2 bg-white">
+              <option value="AUTO">Auto desde CSV</option>
+            </select>
+          </div>
+          <div>
+            <label class="block text-[11px] font-semibold text-teal-900 mb-1">Medición del CSV:</label>
+            <select id="importUnitSelect" class="w-full text-xs border border-teal-200 rounded-xl px-2.5 py-2 bg-white font-semibold">
+              <option value="km">Kilómetros (km)</option>
+              <option value="mi">Millas (mi)</option>
+            </select>
+          </div>
         </div>
         <input type="file" id="csvFileInput" onchange="handleCSVImport(event)"
           class="block w-full text-xs text-slate-600 file:mr-3 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-bold file:bg-teal-700 file:text-white hover:file:bg-teal-800 cursor-pointer" />
@@ -787,6 +804,7 @@
 
     const STORAGE_VEHICLES = 'aseal_vehicles_v1';
     const STORAGE_RECORDS = 'aseal_records_v1';
+    const KM_PER_MI = 1.60934;
 
     let currentUser = null;
     let unsubVehicles = null;
@@ -807,6 +825,26 @@
       t.textContent = msg;
       t.classList.remove('hidden');
       setTimeout(() => t.classList.add('hidden'), 3000);
+    }
+
+    function getVehicleUnit(plate) {
+      const v = vehicles.find(x => x.plate === plate);
+      return v?.distUnit === 'mi' ? 'mi' : 'km';
+    }
+
+    function getActiveDisplayUnit() {
+      if (selectedVehicle !== 'ALL') {
+        return getVehicleUnit(selectedVehicle);
+      }
+      if (vehicles.length && vehicles.every(v => (v.distUnit || 'km') === 'mi')) {
+        return 'mi';
+      }
+      return 'km';
+    }
+
+    function toKm(value, unit) {
+      const n = Number(value) || 0;
+      return unit === 'mi' ? n * KM_PER_MI : n;
     }
 
     // ==================== AUTENTICACIÓN POR FLOTA ====================
@@ -866,11 +904,11 @@
       const recCol = collection(db, 'flotas', uid, 'registros');
 
       unsubVehicles = onSnapshot(vehCol, (snapshot) => {
-        vehicles = snapshot.docs.map(d => ({ plate: d.id, ...d.data() }));
+        vehicles = snapshot.docs.map(d => ({ plate: d.id, distUnit: 'km', ...d.data() }));
         if (!vehicles.length) {
           vehicles = [
-            { plate: 'CRETA-GRAND-2024', name: 'Hyundai Creta Grand 2024', odometer: 17532 },
-            { plate: 'CRETA-2024', name: 'Hyundai Creta 2024', odometer: 8098 }
+            { plate: 'CRETA-GRAND-2024', name: 'Hyundai Creta Grand 2024', odometer: 17532, distUnit: 'km' },
+            { plate: 'CRETA-2024', name: 'Hyundai Creta 2024', odometer: 8098, distUnit: 'km' }
           ];
         }
         populateVehicleSelectors();
@@ -907,7 +945,7 @@
 
       localVehs.forEach(v => {
         const ref = doc(db, 'flotas', uid, 'vehiculos', v.plate);
-        batch.set(ref, { name: v.name, odometer: Number(v.odometer) || 0 }, { merge: true });
+        batch.set(ref, { name: v.name, odometer: Number(v.odometer) || 0, distUnit: v.distUnit || 'km' }, { merge: true });
       });
 
       localRecs.forEach(r => {
@@ -944,12 +982,13 @@
 
       globalSel.innerHTML = `<option value="ALL" class="text-slate-800">Toda la Flota (${vehicles.length})</option>`;
       recSel.innerHTML = '';
-      impSel.innerHTML = `<option value="AUTO">Detectar automáticamente desde el CSV</option>`;
+      impSel.innerHTML = `<option value="AUTO">Auto desde CSV</option>`;
 
       vehicles.forEach(v => {
+        const u = v.distUnit === 'mi' ? 'mi' : 'km';
         globalSel.innerHTML += `<option value="${v.plate}" class="text-slate-800">${v.name} (${v.plate})</option>`;
-        recSel.innerHTML += `<option value="${v.plate}">${v.name} (${v.plate})</option>`;
-        impSel.innerHTML += `<option value="${v.plate}">${v.name} (${v.plate})</option>`;
+        recSel.innerHTML += `<option value="${v.plate}">${v.name} (${u})</option>`;
+        impSel.innerHTML += `<option value="${v.plate}">${v.name} (${u})</option>`;
       });
 
       if (selectedVehicle !== 'ALL' && !vehicles.some(v => v.plate === selectedVehicle)) {
@@ -957,16 +996,18 @@
       }
       globalSel.value = selectedVehicle;
       updateHeaderSub();
+      updateRecordUnitLabel();
     }
 
     function updateHeaderSub() {
       const sub = document.getElementById('headerVehicleSub');
       if (selectedVehicle === 'ALL') {
-        const totalKm = vehicles.reduce((acc, v) => acc + (Number(v.odometer) || 0), 0);
-        sub.textContent = `${vehicles.length} vehículos · ${totalKm.toLocaleString()} km · En vivo`;
+        const totalKm = vehicles.reduce((acc, v) => acc + toKm(v.odometer, v.distUnit || 'km'), 0);
+        sub.textContent = `${vehicles.length} vehículos · ${Math.round(totalKm).toLocaleString()} km equiv. · En vivo`;
       } else {
         const v = vehicles.find(x => x.plate === selectedVehicle);
-        sub.textContent = v ? `${v.plate} · ${Number(v.odometer).toLocaleString()} km · En vivo` : '';
+        const u = v?.distUnit === 'mi' ? 'mi' : 'km';
+        sub.textContent = v ? `${v.plate} · ${Number(v.odometer).toLocaleString()} ${u} · En vivo` : '';
       }
     }
 
@@ -1051,8 +1092,9 @@
     }
 
     function computeDistanceAndDays(list) {
-      if (!list.length) return { totalDist: 0, days: 1, minDate: '', maxDate: '' };
+      if (!list.length) return { totalDist: 0, totalKm: 0, days: 1, minDate: '', maxDate: '' };
 
+      const unit = getActiveDisplayUnit();
       const byPlate = {};
       list.forEach(r => {
         if (!byPlate[r.plate]) byPlate[r.plate] = [];
@@ -1060,10 +1102,18 @@
       });
 
       let totalDist = 0;
-      Object.values(byPlate).forEach(odos => {
+      let totalKm = 0;
+      Object.entries(byPlate).forEach(([plate, odos]) => {
         const valid = odos.filter(x => x > 0);
         if (valid.length >= 2) {
-          totalDist += (Math.max(...valid) - Math.min(...valid));
+          const deltaNative = Math.max(...valid) - Math.min(...valid);
+          const vUnit = getVehicleUnit(plate);
+          totalKm += toKm(deltaNative, vUnit);
+          if (selectedVehicle !== 'ALL') {
+            totalDist += deltaNative;
+          } else {
+            totalDist += (unit === vUnit ? deltaNative : (unit === 'mi' ? deltaNative / KM_PER_MI : deltaNative * KM_PER_MI));
+          }
         }
       });
 
@@ -1074,10 +1124,11 @@
       const d2 = new Date(maxDate);
       const diffDays = Math.max(1, Math.round((d2 - d1) / (1000 * 60 * 60 * 24)) + 1);
 
-      return { totalDist, days: diffDays, minDate, maxDate };
+      return { totalDist, totalKm, days: diffDays, minDate, maxDate };
     }
 
     window.renderReports = function() {
+      const unit = getActiveDisplayUnit();
       const allFiltered = getFilteredRecords();
       const fuelList = allFiltered.filter(r => r.category === 'gasolina');
       const srvList = allFiltered.filter(r => r.category !== 'gasolina');
@@ -1086,9 +1137,16 @@
       if (currentReportSubTab === 'refueling') activeList = fuelList;
       if (currentReportSubTab === 'service') activeList = srvList;
 
-      const { totalDist, days, minDate, maxDate } = computeDistanceAndDays(allFiltered);
+      const { totalDist, totalKm, days, minDate, maxDate } = computeDistanceAndDays(allFiltered);
       document.getElementById('reportEntriesCount').textContent = `${activeList.length} ${activeList.length === 1 ? 'registro' : 'registros'}`;
       document.getElementById('reportDateRangeLabel').textContent = minDate ? `(${minDate} — ${maxDate})` : '(Sin datos)';
+
+      document.getElementById('gen-cost-unit-lbl').textContent = `Por ${unit}`;
+      document.getElementById('gen-dist-unit').textContent = unit;
+      document.getElementById('gen-fuel-unit-lbl').textContent = `Por ${unit}`;
+      document.getElementById('gen-srv-unit-lbl').textContent = `Por ${unit}`;
+      document.getElementById('ref-cost-unit-lbl').textContent = `Por ${unit}`;
+      document.getElementById('srv-cost-unit-lbl').textContent = `Por ${unit}`;
 
       const totalFuelCost = fuelList.reduce((s, r) => s + (Number(r.amount) || 0), 0);
       const totalSrvCost = srvList.reduce((s, r) => s + (Number(r.amount) || 0), 0);
@@ -1096,29 +1154,30 @@
 
       document.getElementById('gen-total-cost').textContent = `$${totalAllCost.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
       document.getElementById('gen-cost-day').textContent = `$${(totalAllCost / days).toFixed(2)}`;
-      document.getElementById('gen-cost-km').textContent = totalDist > 0 ? `$${(totalAllCost / totalDist).toFixed(2)}` : '$0.00';
+      document.getElementById('gen-cost-unit').textContent = totalDist > 0 ? `$${(totalAllCost / totalDist).toFixed(2)}` : '$0.00';
 
-      document.getElementById('gen-total-dist').textContent = totalDist.toLocaleString();
-      document.getElementById('gen-dist-day').textContent = `${Math.round(totalDist / days)} km`;
+      document.getElementById('gen-total-dist').textContent = Math.round(totalDist).toLocaleString();
+      document.getElementById('gen-dist-day').textContent = `${Math.round(totalDist / days)} ${unit}`;
 
       document.getElementById('gen-fuel-cost').textContent = `$${totalFuelCost.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
       document.getElementById('gen-fuel-day').textContent = `$${(totalFuelCost / days).toFixed(2)}`;
-      document.getElementById('gen-fuel-km').textContent = totalDist > 0 ? `$${(totalFuelCost / totalDist).toFixed(2)}` : '$0.00';
+      document.getElementById('gen-fuel-unit').textContent = totalDist > 0 ? `$${(totalFuelCost / totalDist).toFixed(2)}` : '$0.00';
 
       document.getElementById('gen-srv-cost').textContent = `$${totalSrvCost.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
       document.getElementById('gen-srv-day').textContent = `$${(totalSrvCost / days).toFixed(2)}`;
-      document.getElementById('gen-srv-km').textContent = totalDist > 0 ? `$${(totalSrvCost / totalDist).toFixed(2)}` : '$0.00';
+      document.getElementById('gen-srv-unit').textContent = totalDist > 0 ? `$${(totalSrvCost / totalDist).toFixed(2)}` : '$0.00';
 
       renderGeneralChart(allFiltered);
 
       const fuelMeta = computeDistanceAndDays(fuelList);
       const fuelDays = fuelMeta.days;
       const fuelDist = fuelMeta.totalDist || totalDist;
+      const fuelKm = fuelMeta.totalKm || totalKm;
       const totalGal = fuelList.reduce((s, r) => s + (Number(r.volume) || 0), 0);
 
       document.getElementById('ref-total-cost').textContent = `$${totalFuelCost.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
       document.getElementById('ref-cost-day').textContent = `$${(totalFuelCost / fuelDays).toFixed(2)}`;
-      document.getElementById('ref-cost-km').textContent = fuelDist > 0 ? `$${(totalFuelCost / fuelDist).toFixed(2)}` : '$0.00';
+      document.getElementById('ref-cost-unit').textContent = fuelDist > 0 ? `$${(totalFuelCost / fuelDist).toFixed(2)}` : '$0.00';
 
       document.getElementById('ref-total-vol').textContent = totalGal.toFixed(2);
       document.getElementById('ref-vol-fill').textContent = fuelList.length ? `${(totalGal / fuelList.length).toFixed(2)} gal` : '0.00 gal';
@@ -1142,10 +1201,11 @@
         byPlateFuel[r.plate].push(r);
       });
 
-      Object.values(byPlateFuel).forEach(arr => {
+      Object.entries(byPlateFuel).forEach(([plate, arr]) => {
+        const vUnit = getVehicleUnit(plate);
         arr.sort((a, b) => Number(a.odometer) - Number(b.odometer));
         for (let i = 1; i < arr.length; i++) {
-          const dKm = Number(arr[i].odometer) - Number(arr[i - 1].odometer);
+          const dKm = toKm(Number(arr[i].odometer) - Number(arr[i - 1].odometer), vUnit);
           const gal = Number(arr[i].volume);
           if (dKm > 20 && gal > 0) {
             const liters = gal * 3.78541;
@@ -1156,13 +1216,13 @@
       });
 
       const totalLiters = totalGal * 3.78541;
-      const genL100 = fuelDist > 0 ? (totalLiters / fuelDist) * 100 : 0;
-      const genKmGal = totalGal > 0 ? (fuelDist / totalGal) : 0;
+      const genL100 = fuelKm > 0 ? (totalLiters / fuelKm) * 100 : 0;
+      const genDistGal = totalGal > 0 ? (fuelDist / totalGal) : 0;
       const bestEff = efficienciesL100.length ? Math.min(...efficienciesL100) : genL100;
       const worstEff = efficienciesL100.length ? Math.max(...efficienciesL100) : genL100;
 
       document.getElementById('ref-avg-eff').textContent = genL100.toFixed(2);
-      document.getElementById('ref-avg-kmgal').textContent = `${genKmGal.toFixed(1)} km/gal`;
+      document.getElementById('ref-avg-distgal').textContent = `${genDistGal.toFixed(1)} ${unit}/gal`;
       document.getElementById('ref-best-eff').textContent = `${bestEff.toFixed(2)} L/100`;
       document.getElementById('ref-worst-eff').textContent = `${worstEff.toFixed(2)} L/100`;
 
@@ -1171,7 +1231,7 @@
       document.getElementById('srv-count-label').textContent = `${srvList.length} ${srvList.length === 1 ? 'servicio registrado' : 'servicios registrados'}`;
       document.getElementById('srv-total-cost').textContent = `$${totalSrvCost.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
       document.getElementById('srv-cost-day').textContent = `$${(totalSrvCost / days).toFixed(2)}`;
-      document.getElementById('srv-cost-km').textContent = totalDist > 0 ? `$${(totalSrvCost / totalDist).toFixed(2)}` : '$0.00';
+      document.getElementById('srv-cost-unit').textContent = totalDist > 0 ? `$${(totalSrvCost / totalDist).toFixed(2)}` : '$0.00';
       document.getElementById('srv-avg-visit').textContent = srvList.length ? `$${(totalSrvCost / srvList.length).toFixed(2)}` : '$0.00';
 
       renderServiceDetails(srvList, totalSrvCost);
@@ -1212,15 +1272,18 @@
       }).join('');
 
       const recent = [...srvList].reverse().slice(0, 10);
-      recentEl.innerHTML = recent.map(r => `
-        <div class="py-2.5 flex items-center justify-between gap-2">
-          <div class="min-w-0">
-            <p class="text-xs font-bold text-slate-800 truncate">${r.serviceType || 'Servicio de Taller'}</p>
-            <p class="text-[11px] text-slate-400">${r.date} · ${Number(r.odometer).toLocaleString()} km ${r.provider ? '· ' + r.provider : ''}</p>
+      recentEl.innerHTML = recent.map(r => {
+        const u = getVehicleUnit(r.plate);
+        return `
+          <div class="py-2.5 flex items-center justify-between gap-2">
+            <div class="min-w-0">
+              <p class="text-xs font-bold text-slate-800 truncate">${r.serviceType || 'Servicio de Taller'}</p>
+              <p class="text-[11px] text-slate-400">${r.date} · ${Number(r.odometer).toLocaleString()} ${u} ${r.provider ? '· ' + r.provider : ''}</p>
+            </div>
+            <span class="text-xs font-extrabold text-stone-700 shrink-0">$${Number(r.amount).toFixed(2)}</span>
           </div>
-          <span class="text-xs font-extrabold text-stone-700 shrink-0">$${Number(r.amount).toFixed(2)}</span>
-        </div>
-      `).join('');
+        `;
+      }).join('');
     }
 
     function renderGeneralChart(list) {
@@ -1327,6 +1390,7 @@
 
     function renderHistory() {
       const container = document.getElementById('historyListContainer');
+      const activeUnit = getActiveDisplayUnit();
 
       const allSortedAsc = [...records]
         .filter(r => selectedVehicle === 'ALL' || r.plate === selectedVehicle)
@@ -1338,14 +1402,16 @@
 
       allSortedAsc.forEach(r => {
         if (r.category === 'gasolina') {
+          const vUnit = getVehicleUnit(r.plate);
           const prev = lastFuelByPlate[r.plate];
           if (prev && Number(r.odometer) > Number(prev.odometer) && Number(r.volume) > 0) {
-            const dKm = Number(r.odometer) - Number(prev.odometer);
+            const deltaNative = Number(r.odometer) - Number(prev.odometer);
+            const dKm = toKm(deltaNative, vUnit);
             const liters = Number(r.volume) * 3.78541;
             const l100 = (liters / dKm) * 100;
             if (l100 > 1.5 && l100 < 40) {
               effById[r.id] = l100;
-              distById[r.id] = dKm;
+              distById[r.id] = { value: deltaNative, unit: vUnit };
             }
           }
           lastFuelByPlate[r.plate] = r;
@@ -1374,13 +1440,17 @@
       sortedMonths.forEach(ym => {
         const items = monthMap[ym];
         const totalCost = items.reduce((s, r) => s + (Number(r.amount) || 0), 0);
-        const totalDist = items.reduce((s, r) => s + (distById[r.id] || 0), 0);
+        const totalDist = items.reduce((s, r) => {
+          const d = distById[r.id];
+          if (!d) return s;
+          if (selectedVehicle !== 'ALL') return s + d.value;
+          return s + (activeUnit === d.unit ? d.value : (activeUnit === 'mi' ? d.value / KM_PER_MI : d.value * KM_PER_MI));
+        }, 0);
         const effs = items.map(r => effById[r.id]).filter(v => v > 0);
         const avgL100 = effs.length ? (effs.reduce((a, b) => a + b, 0) / effs.length) : 0;
         monthStats[ym] = { totalCost, totalDist, avgL100, items };
       });
 
-      // Contenedor único relativo con una sola carretera continua a la izquierda (carril 44px -> eje en 22px)
       let html = `<div class="relative"><div class="road-track-line"></div>`;
 
       sortedMonths.forEach((ym, mIndex) => {
@@ -1400,10 +1470,9 @@
         }
 
         const metricsParts = [`$${stat.totalCost.toFixed(2)}`];
-        if (stat.totalDist > 0) metricsParts.push(`${stat.totalDist.toLocaleString()} km`);
+        if (stat.totalDist > 0) metricsParts.push(`${Math.round(stat.totalDist).toLocaleString()} ${activeUnit}`);
         if (stat.avgL100 > 0) metricsParts.push(`${stat.avgL100.toFixed(2)} L/100km`);
 
-        // Tarjeta resumen mensual (sin alterar el carril izquierdo de 44px)
         html += `
           <div class="relative flex items-center pl-11 py-2">
             <div class="flex-1 bg-slate-100/95 border border-slate-200/80 rounded-2xl px-4 py-3 z-10">
@@ -1414,17 +1483,17 @@
           </div>
         `;
 
-        // Eventos del mes con ícono centrado exactamente en left: 4px (w-9 = 36px -> 4 + 18 = 22px, centro exacto de la carretera)
         stat.items.forEach(r => {
+          const rUnit = getVehicleUnit(r.plate);
           const isFuel = r.category === 'gasolina';
           const circleBg = isFuel ? 'bg-amber-500' : 'bg-stone-600';
           const iconClass = isFuel ? 'fa-gas-pump' : 'fa-wrench';
           const titleText = isFuel ? 'Gasolina' : (r.serviceType || 'Servicio');
 
-          const subParts = [`${Number(r.odometer).toLocaleString()} km`];
+          const subParts = [`${Number(r.odometer).toLocaleString()} ${rUnit}`];
           if (isFuel && effById[r.id]) subParts.push(`${effById[r.id].toFixed(2)} L/100km`);
           if (isFuel && Number(r.volume) > 0) subParts.push(`${Number(r.volume).toFixed(2)} gal`);
-          if (selectedVehicle === 'ALL') subParts.push(r.plate);
+          if (selectedVehicle === 'ALL') subParts.push(`${r.plate} (${rUnit})`);
 
           html += `
             <div onclick="openDetailModal('${r.id}')" class="relative flex items-center pl-11 py-3 pr-1 border-b border-slate-100 cursor-pointer active:bg-slate-100/70 transition">
@@ -1456,6 +1525,7 @@
     window.openDetailModal = function(id) {
       const r = records.find(x => String(x.id) === String(id));
       if (!r) return;
+      const u = getVehicleUnit(r.plate);
       const isFuel = r.category === 'gasolina';
       const iconBox = document.getElementById('detIconBox');
       const icon = document.getElementById('detIcon');
@@ -1463,12 +1533,12 @@
       iconBox.className = `w-9 h-9 rounded-full ${isFuel ? 'bg-amber-500' : 'bg-stone-600'} text-white flex items-center justify-center`;
       icon.className = `fa-solid ${isFuel ? 'fa-gas-pump' : 'fa-wrench'}`;
       document.getElementById('detTitle').textContent = isFuel ? 'Carga de Combustible' : (r.serviceType || 'Servicio');
-      document.getElementById('detSub').textContent = `${r.plate} · ${r.date}`;
+      document.getElementById('detSub').textContent = `${r.plate} (${u}) · ${r.date}`;
 
       const ppg = (isFuel && Number(r.volume) > 0) ? `$${(Number(r.amount) / Number(r.volume)).toFixed(3)} / gal` : '—';
       document.getElementById('detGrid').innerHTML = `
         <div><span class="text-slate-400 block text-[10px]">Monto Total</span><strong class="text-sm text-slate-800">$${Number(r.amount).toFixed(2)}</strong></div>
-        <div><span class="text-slate-400 block text-[10px]">Odómetro</span><strong class="text-sm text-slate-800">${Number(r.odometer).toLocaleString()} km</strong></div>
+        <div><span class="text-slate-400 block text-[10px]">Odómetro</span><strong class="text-sm text-slate-800">${Number(r.odometer).toLocaleString()} ${u}</strong></div>
         ${isFuel ? `
           <div><span class="text-slate-400 block text-[10px]">Volumen</span><strong class="text-sm text-slate-800">${Number(r.volume).toFixed(2)} gal</strong></div>
           <div><span class="text-slate-400 block text-[10px]">Precio / Galón</span><strong class="text-sm text-slate-800">${ppg}</strong></div>
@@ -1503,18 +1573,26 @@
     function renderVehicles() {
       const container = document.getElementById('vehiclesListContainer');
       container.innerHTML = vehicles.map(v => {
+        const u = v.distUnit === 'mi' ? 'mi' : 'km';
         const vRecs = records.filter(r => r.plate === v.plate);
         const totalSpent = vRecs.reduce((s, r) => s + (Number(r.amount) || 0), 0);
         return `
           <div class="bg-white rounded-2xl p-4 card-shadow border border-slate-100 space-y-2">
-            <div class="flex items-center justify-between">
+            <div class="flex items-center justify-between gap-2">
               <div>
-                <span class="text-[11px] font-bold px-2 py-0.5 rounded-md bg-teal-50 text-teal-700">${v.plate}</span>
+                <div class="flex items-center gap-1.5">
+                  <span class="text-[11px] font-bold px-2 py-0.5 rounded-md bg-teal-50 text-teal-700">${v.plate}</span>
+                  <button type="button" onclick="toggleVehicleUnit('${v.plate}')"
+                    class="text-[11px] font-extrabold px-2 py-0.5 rounded-md bg-slate-100 hover:bg-slate-200 text-slate-700 transition"
+                    title="Cambiar entre km y millas">
+                    <i class="fa-solid fa-arrows-rotate mr-1 text-[10px]"></i>${u.toUpperCase()}
+                  </button>
+                </div>
                 <h3 class="text-sm font-extrabold text-slate-800 mt-1">${v.name}</h3>
               </div>
               <div class="text-right">
                 <p class="text-xs text-slate-400">Odómetro</p>
-                <p class="text-sm font-extrabold text-slate-700">${Number(v.odometer).toLocaleString()} km</p>
+                <p class="text-sm font-extrabold text-slate-700">${Number(v.odometer).toLocaleString()} ${u}</p>
               </div>
             </div>
             <div class="pt-2 border-t border-slate-100 flex items-center justify-between text-xs text-slate-500">
@@ -1526,13 +1604,33 @@
       }).join('');
     }
 
+    window.toggleVehicleUnit = async function(plate) {
+      if (!currentUser) return;
+      const v = vehicles.find(x => x.plate === plate);
+      if (!v) return;
+      const nextUnit = (v.distUnit === 'mi') ? 'km' : 'mi';
+      await setDoc(doc(db, 'flotas', currentUser.uid, 'vehiculos', plate), {
+        name: v.name,
+        odometer: Number(v.odometer) || 0,
+        distUnit: nextUnit
+      }, { merge: true });
+      showToast(`${plate} configurado en ${nextUnit === 'mi' ? 'Millas (mi)' : 'Kilómetros (km)'}`);
+    };
+
     function renderAll() {
+      updateHeaderSub();
       renderReports();
       renderHistory();
       renderVehicles();
     }
 
     // ==================== MODALES Y CRUD EN FIRESTORE ====================
+    window.updateRecordUnitLabel = function() {
+      const plate = document.getElementById('recVehicle').value;
+      const u = getVehicleUnit(plate);
+      document.getElementById('recOdoLabel').textContent = `Odómetro (${u})`;
+    };
+
     window.openRecordModal = function() {
       document.getElementById('recordForm').reset();
       document.getElementById('recId').value = '';
@@ -1540,6 +1638,7 @@
       if (selectedVehicle !== 'ALL') {
         document.getElementById('recVehicle').value = selectedVehicle;
       }
+      updateRecordUnitLabel();
       const savedAuthor = localStorage.getItem('aseal_last_author');
       if (savedAuthor) document.getElementById('recAuthor').value = savedAuthor;
       setRecordCategory(currentReportSubTab === 'service' ? 'mantenimiento' : 'gasolina');
@@ -1605,7 +1704,8 @@
       if (veh && odometer > Number(veh.odometer)) {
         await setDoc(doc(db, 'flotas', uid, 'vehiculos', plate), {
           name: veh.name,
-          odometer
+          odometer,
+          distUnit: veh.distUnit || 'km'
         }, { merge: true });
       }
 
@@ -1619,7 +1719,13 @@
       showToast('Registro eliminado');
     };
 
+    window.updateVehOdoPlaceholder = function() {
+      const u = document.getElementById('vehUnit').value;
+      document.getElementById('vehOdoLabel').textContent = `Odómetro Actual (${u})`;
+    };
+
     window.openVehicleModal = function() {
+      updateVehOdoPlaceholder();
       document.getElementById('vehicleModal').classList.remove('hidden');
     };
     window.closeVehicleModal = function() {
@@ -1632,10 +1738,12 @@
       const plate = document.getElementById('vehPlate').value.trim().toUpperCase();
       const name = document.getElementById('vehName').value.trim();
       const odometer = parseFloat(document.getElementById('vehOdo').value) || 0;
+      const distUnit = document.getElementById('vehUnit').value || 'km';
 
       await setDoc(doc(db, 'flotas', currentUser.uid, 'vehiculos', plate), {
         name,
-        odometer
+        odometer,
+        distUnit
       }, { merge: true });
 
       closeVehicleModal();
@@ -1660,6 +1768,7 @@
       const file = event.target.files[0];
       if (!file || !currentUser) return;
       const targetPlate = document.getElementById('importTargetVehicle').value;
+      const impUnit = document.getElementById('importUnitSelect').value || 'km';
 
       const reader = new FileReader();
       reader.onload = async function(e) {
@@ -1718,7 +1827,8 @@
           const finalOdo = existingVeh ? Math.max(Number(existingVeh.odometer) || 0, info.odometer) : info.odometer;
           batch.set(doc(db, 'flotas', uid, 'vehiculos', plate), {
             name: existingVeh ? existingVeh.name : info.name,
-            odometer: finalOdo
+            odometer: finalOdo,
+            distUnit: existingVeh?.distUnit || impUnit
           }, { merge: true });
         });
 
@@ -1730,10 +1840,11 @@
     };
 
     window.exportCSV = function() {
-      const headers = ['ID', 'Placa', 'Vehiculo', 'Fecha', 'Categoria', 'Odometro', 'MontoBase', 'Volumen', 'TipoServicio', 'Autor', 'Notas'];
+      const headers = ['ID', 'Placa', 'Vehiculo', 'Unidad', 'Fecha', 'Categoria', 'Odometro', 'MontoBase', 'Volumen', 'TipoServicio', 'Autor', 'Notas'];
       const rows = records.map(r => {
         const v = vehicles.find(x => x.plate === r.plate);
-        return [r.id, r.plate, v ? v.name : r.plate, r.date, r.category, r.odometer, r.amount, r.volume || 0, r.serviceType || '', r.author || '', r.notes || '']
+        const u = v?.distUnit || 'km';
+        return [r.id, r.plate, v ? v.name : r.plate, u, r.date, r.category, r.odometer, r.amount, r.volume || 0, r.serviceType || '', r.author || '', r.notes || '']
           .map(val => `"${String(val).replace(/"/g, '""')}"`).join(',');
       });
       const blob = new Blob(['\uFEFF' + [headers.join(','), ...rows].join('\n')], { type: 'text/csv;charset=utf-8;' });
@@ -1744,7 +1855,7 @@
     };
 
     window.downloadBackupJSON = function() {
-      const payload = { version: 13, exportedAt: new Date().toISOString(), vehicles, records };
+      const payload = { version: 14, exportedAt: new Date().toISOString(), vehicles, records };
       const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
       const a = document.createElement('a');
       a.href = URL.createObjectURL(blob);
@@ -1763,7 +1874,11 @@
             const batch = writeBatch(db);
             const uid = currentUser.uid;
             data.vehicles.forEach(v => {
-              batch.set(doc(db, 'flotas', uid, 'vehiculos', v.plate), { name: v.name, odometer: Number(v.odometer) || 0 }, { merge: true });
+              batch.set(doc(db, 'flotas', uid, 'vehiculos', v.plate), {
+                name: v.name,
+                odometer: Number(v.odometer) || 0,
+                distUnit: v.distUnit || 'km'
+              }, { merge: true });
             });
             data.records.forEach(r => {
               batch.set(doc(db, 'flotas', uid, 'registros', String(r.id || Date.now() + Math.random())), r, { merge: true });
