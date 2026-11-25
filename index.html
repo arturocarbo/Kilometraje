@@ -679,20 +679,21 @@
     </div>
   </div>
 
-  <!-- ==================== MODAL: VEHÍCULO ==================== -->
+  <!-- ==================== MODAL: VEHÍCULO (CREAR / EDITAR) ==================== -->
   <div id="vehicleModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-xs z-50 hidden flex items-center justify-center p-4">
     <div class="bg-white w-full max-w-md rounded-3xl p-5 space-y-4 animate-fade">
       <div class="flex items-center justify-between border-b border-slate-100 pb-3">
-        <h3 class="text-base font-extrabold text-slate-800">Datos del Vehículo</h3>
+        <h3 id="vehicleModalTitle" class="text-base font-extrabold text-slate-800">Datos del Vehículo</h3>
         <button type="button" onclick="closeVehicleModal()" class="w-8 h-8 rounded-full bg-slate-100 text-slate-500 flex items-center justify-center">
           <i class="fa-solid fa-xmark"></i>
         </button>
       </div>
       <form onsubmit="saveVehicle(event)" class="space-y-3">
+        <input type="hidden" id="vehEditingPlate" />
         <div>
           <label class="block text-xs font-semibold text-slate-600 mb-1">Placa / Identificador</label>
           <input type="text" id="vehPlate" required placeholder="Ej: CRETA-GRAND-2024 o P123-456"
-            class="w-full text-sm border border-slate-200 rounded-xl px-3 py-2.5 uppercase font-bold" />
+            class="w-full text-sm border border-slate-200 rounded-xl px-3 py-2.5 uppercase font-bold disabled:bg-slate-100 disabled:text-slate-500" />
         </div>
         <div>
           <label class="block text-xs font-semibold text-slate-600 mb-1">Marca y Modelo</label>
@@ -710,10 +711,10 @@
           <div>
             <label id="vehOdoLabel" class="block text-xs font-semibold text-slate-600 mb-1">Odómetro Actual (km)</label>
             <input type="number" id="vehOdo" required placeholder="0"
-              class="w-full text-sm border border-slate-200 rounded-xl px-3 py-2.5" />
+              class="w-full text-sm border border-slate-200 rounded-xl px-3 py-2.5 font-semibold" />
           </div>
         </div>
-        <button type="submit" class="w-full bg-teal-700 text-white font-bold py-3 rounded-2xl shadow-sm">
+        <button type="submit" id="saveVehicleBtn" class="w-full bg-teal-700 text-white font-bold py-3 rounded-2xl shadow-sm">
           Guardar Vehículo
         </button>
       </form>
@@ -907,7 +908,7 @@
         vehicles = snapshot.docs.map(d => ({ plate: d.id, distUnit: 'km', ...d.data() }));
         if (!vehicles.length) {
           vehicles = [
-            { plate: 'CRETA-GRAND-2024', name: 'Hyundai Creta Grand 2024', odometer: 17532, distUnit: 'km' },
+            { plate: 'CRETA-GRAND-2024', name: 'Hyundai Creta Grand 2024', odometer: 17847, distUnit: 'km' },
             { plate: 'CRETA-2024', name: 'Hyundai Creta 2024', odometer: 8098, distUnit: 'km' }
           ];
         }
@@ -1577,10 +1578,10 @@
         const vRecs = records.filter(r => r.plate === v.plate);
         const totalSpent = vRecs.reduce((s, r) => s + (Number(r.amount) || 0), 0);
         return `
-          <div class="bg-white rounded-2xl p-4 card-shadow border border-slate-100 space-y-2">
+          <div class="bg-white rounded-2xl p-4 card-shadow border border-slate-100 space-y-2.5">
             <div class="flex items-center justify-between gap-2">
-              <div>
-                <div class="flex items-center gap-1.5">
+              <div class="min-w-0">
+                <div class="flex items-center gap-1.5 flex-wrap">
                   <span class="text-[11px] font-bold px-2 py-0.5 rounded-md bg-teal-50 text-teal-700">${v.plate}</span>
                   <button type="button" onclick="toggleVehicleUnit('${v.plate}')"
                     class="text-[11px] font-extrabold px-2 py-0.5 rounded-md bg-slate-100 hover:bg-slate-200 text-slate-700 transition"
@@ -1588,16 +1589,23 @@
                     <i class="fa-solid fa-arrows-rotate mr-1 text-[10px]"></i>${u.toUpperCase()}
                   </button>
                 </div>
-                <h3 class="text-sm font-extrabold text-slate-800 mt-1">${v.name}</h3>
+                <h3 class="text-sm font-extrabold text-slate-800 mt-1 truncate">${v.name}</h3>
               </div>
-              <div class="text-right">
+              <div class="text-right shrink-0">
                 <p class="text-xs text-slate-400">Odómetro</p>
                 <p class="text-sm font-extrabold text-slate-700">${Number(v.odometer).toLocaleString()} ${u}</p>
               </div>
             </div>
-            <div class="pt-2 border-t border-slate-100 flex items-center justify-between text-xs text-slate-500">
+            <div class="pt-2.5 border-t border-slate-100 flex items-center justify-between text-xs text-slate-500">
               <span>${vRecs.length} registros · Total: <strong>$${totalSpent.toFixed(2)}</strong></span>
-              <button type="button" onclick="deleteVehicle('${v.plate}')" class="text-rose-500 font-semibold">Eliminar</button>
+              <div class="flex items-center gap-3">
+                <button type="button" onclick="openVehicleModal('${v.plate}')" class="text-teal-700 font-bold hover:underline">
+                  <i class="fa-solid fa-pen mr-1"></i>Editar
+                </button>
+                <button type="button" onclick="deleteVehicle('${v.plate}')" class="text-rose-500 font-semibold hover:underline">
+                  Eliminar
+                </button>
+              </div>
             </div>
           </div>
         `;
@@ -1724,10 +1732,44 @@
       document.getElementById('vehOdoLabel').textContent = `Odómetro Actual (${u})`;
     };
 
-    window.openVehicleModal = function() {
+    window.openVehicleModal = function(plateToEdit = null) {
+      const plateInput = document.getElementById('vehPlate');
+      const nameInput = document.getElementById('vehName');
+      const unitInput = document.getElementById('vehUnit');
+      const odoInput = document.getElementById('vehOdo');
+      const editHidden = document.getElementById('vehEditingPlate');
+      const titleEl = document.getElementById('vehicleModalTitle');
+      const btnEl = document.getElementById('saveVehicleBtn');
+
+      if (plateToEdit) {
+        const v = vehicles.find(x => x.plate === plateToEdit);
+        if (v) {
+          editHidden.value = v.plate;
+          plateInput.value = v.plate;
+          plateInput.disabled = true;
+          nameInput.value = v.name || '';
+          unitInput.value = v.distUnit === 'mi' ? 'mi' : 'km';
+          odoInput.value = Number(v.odometer) || 0;
+          titleEl.textContent = `Editar Vehículo (${v.plate})`;
+          btnEl.textContent = 'Actualizar Vehículo';
+          updateVehOdoPlaceholder();
+          document.getElementById('vehicleModal').classList.remove('hidden');
+          return;
+        }
+      }
+
+      editHidden.value = '';
+      plateInput.value = '';
+      plateInput.disabled = false;
+      nameInput.value = '';
+      unitInput.value = 'km';
+      odoInput.value = '';
+      titleEl.textContent = 'Agregar Vehículo';
+      btnEl.textContent = 'Guardar Vehículo';
       updateVehOdoPlaceholder();
       document.getElementById('vehicleModal').classList.remove('hidden');
     };
+
     window.closeVehicleModal = function() {
       document.getElementById('vehicleModal').classList.add('hidden');
     };
@@ -1735,7 +1777,8 @@
     window.saveVehicle = async function(e) {
       e.preventDefault();
       if (!currentUser) return;
-      const plate = document.getElementById('vehPlate').value.trim().toUpperCase();
+      const editingPlate = document.getElementById('vehEditingPlate').value;
+      const plate = (editingPlate || document.getElementById('vehPlate').value).trim().toUpperCase();
       const name = document.getElementById('vehName').value.trim();
       const odometer = parseFloat(document.getElementById('vehOdo').value) || 0;
       const distUnit = document.getElementById('vehUnit').value || 'km';
@@ -1747,7 +1790,7 @@
       }, { merge: true });
 
       closeVehicleModal();
-      showToast('Vehículo sincronizado');
+      showToast(editingPlate ? 'Vehículo actualizado' : 'Vehículo sincronizado');
     };
 
     window.deleteVehicle = async function(plate) {
@@ -1788,7 +1831,11 @@
           const row = {};
           headers.forEach((h, idx) => row[h] = cols[idx] || '');
 
-          const plate = targetPlate !== 'AUTO' ? targetPlate : (row.placa || 'SIN-PLACA').toUpperCase();
+          const rowPlate = (row.placa || '').trim().toUpperCase();
+          if (targetPlate === 'AUTO' && !rowPlate) {
+            continue;
+          }
+          const plate = targetPlate !== 'AUTO' ? targetPlate : rowPlate;
           const vehName = row.vehiculo || plate;
           const date = row.fecha || new Date().toISOString().split('T')[0];
           const odometer = parseFloat(row.odometro) || 0;
@@ -1855,7 +1902,7 @@
     };
 
     window.downloadBackupJSON = function() {
-      const payload = { version: 14, exportedAt: new Date().toISOString(), vehicles, records };
+      const payload = { version: 15, exportedAt: new Date().toISOString(), vehicles, records };
       const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
       const a = document.createElement('a');
       a.href = URL.createObjectURL(blob);
